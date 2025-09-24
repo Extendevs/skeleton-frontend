@@ -11,7 +11,7 @@ export const TableLoading = ({
 }: TableLoadingProps): JSX.Element => {
   return (
     <div
-      className={`flex items-center gap-3 rounded-md border border-slate-200/80 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm ${
+      className={`min-h-[134px] flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-slate-200 bg-white/70 px-4 py-6 text-sm text-slate-500 ${
         className ?? ''
       }`}
     >
@@ -19,7 +19,7 @@ export const TableLoading = ({
         <span className="absolute inline-flex h-4 w-4 animate-ping rounded-full bg-slate-400/60"></span>
         <span className="relative inline-flex h-4 w-4 rounded-full bg-slate-500"></span>
       </span>
-      <div>
+      <div className='text-center'>
         <div className="font-medium text-slate-700">{message}</div>
         {description && <div className="text-xs text-slate-500">{description}</div>}
       </div>

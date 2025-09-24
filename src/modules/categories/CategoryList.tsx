@@ -137,16 +137,6 @@ export const CategoryList = () => {
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200">
-          {isLoading && (
-            <caption className="px-4 py-3 text-left text-sm text-slate-500">
-              <TableLoading className="!border-0 !bg-transparent !px-0 !py-0" />
-            </caption>
-          )}
-          {!isLoading && entities.length === 0 && (
-            <caption className="px-4 py-3 text-left text-sm text-slate-500">
-              <TableEmptyState className="!border-0 !bg-transparent !px-0 !py-0" />
-            </caption>
-          )}
           <thead className="bg-slate-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
@@ -167,56 +157,66 @@ export const CategoryList = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
-            {!isLoading && entities.length > 0 &&
-              entities.map((category) => (
-                <tr key={category.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-slate-900">{category.name}</div>
-                    {category.description && (
-                      <div className="text-xs text-slate-500">{category.description}</div>
+            {entities.map((category) => (
+              <tr key={category.id} className="hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="text-sm font-medium text-slate-900">{category.name}</div>
+                  {category.description && (
+                    <div className="text-xs text-slate-500">{category.description}</div>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                      category.status === 'active'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-rose-100 text-rose-700'
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
-                        category.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-rose-100 text-rose-700'
-                      )}
-                    >
-                      {category.status}
+                  >
+                    {category.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-700">
+                  {category.color ? (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-4 w-4 rounded-full border border-slate-300"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-xs font-mono">{category.color}</span>
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
-                    {category.color ? (
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="h-4 w-4 rounded-full border border-slate-300"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className="text-xs font-mono">{category.color}</span>
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
-             <td className="px-4 py-3 text-right text-sm">
-               <ListActionButtons
-                 disabled={isLoading || isDeleting || isSaving}
-                 dropdown={false}
-                 edit={permissions.canEdit}
-                 remove={permissions.canDelete}
-                 onEdit={() => handleEdit(category)}
-                 onRemove={() => handleDeleteClick(category)}
-               />
-             </td>
-                </tr>
-              ))
-            }
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
+                <td className="px-4 py-3 text-right text-sm">
+                  <ListActionButtons
+                    disabled={isLoading || isDeleting || isSaving}
+                    dropdown={false}
+                    edit={permissions.canEdit}
+                    remove={permissions.canDelete}
+                    onEdit={() => handleEdit(category)}
+                    onRemove={() => handleDeleteClick(category)}
+                  />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+        
+        {isLoading && (
+          <div className="p-4">
+            <TableLoading />
+          </div>
+        )}
+        
+        {!isLoading && entities.length === 0 && (
+          <div className="p-4">
+            <TableEmptyState />
+          </div>
+        )}
       </div>
 
       {entities.length > 0 && (
