@@ -1,69 +1,206 @@
-import { ListActions } from '../../shared/components/ListActions';
+import { useState, useCallback } from 'react';
+import { useCategoryList } from './hooks/useCategoryList';
+import { useCategoryStore } from './store/categoryStore';
+import { Category } from './schema';
+import { PageHeader } from '../../shared/components/atoms/PageHeader';
+import { Button } from '../../shared/ui/button';
+import { PlusIcon } from '../../shared/components/icons/Icons';
 import { TableLoading } from '../../shared/components/TableLoading';
 import { TableEmptyState } from '../../shared/components/TableEmptyState';
-import { Category } from './schema';
+import { ListActionButtons } from '../../shared/components/ListActionButtons';
+import { Pagination } from '../../shared/components/Pagination';
+import { CategoryFormModal } from './CategoryFormModal';
+import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
+import { CrudMode } from '../../core/enums/CrudMode';
+import { cn } from '../../shared/utils/cn';
 
-interface CategoryListProps {
-  categories: Category[];
-  isLoading: boolean;
-  onEdit?: (category: Category) => void;
-  onDelete?: (category: Category) => void;
-}
+export const CategoryList = () => {
+  const { onPageChanged, onRemove } = useCategoryList();
+  const entities = useCategoryStore((state) => state.entities);
+  const pagination = useCategoryStore((state) => state.pagination);
+  const isLoading = useCategoryStore((state) => state.isLoading);
+  const isDeleting = useCategoryStore((state) => state.isDeleting);
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<CrudMode>(CrudMode.CREATE);
+  const [selectedEntity, setSelectedEntity] = useState<Category | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-export const CategoryList = ({ categories, isLoading, onEdit, onDelete }: CategoryListProps) => {
-  const captionContent = isLoading ? (
-    <TableLoading  />
-  ) : categories.length === 0 ? (
-    <TableEmptyState  />
-  ) : null;
+  // Data is loaded automatically by useBaseList with autoInit: true
+  // No need for manual useEffect here
+
+  const handleCreate = useCallback(() => {
+    setSelectedEntity(null);
+    setModalMode(CrudMode.CREATE);
+    setModalOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((category: Category) => {
+    setSelectedEntity(category);
+    setModalMode(CrudMode.EDIT);
+    setModalOpen(true);
+  }, []);
+
+  const handleDeleteClick = useCallback((category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!categoryToDelete) return;
+    
+    try {
+      await onRemove(categoryToDelete);
+      setCategoryToDelete(null);
+      setDeleteConfirmOpen(false);
+    } catch (error) {
+      // Handle error silently or show toast
+    }
+  }, [categoryToDelete, onRemove]);
+
+  const handleModalClose = useCallback(() => {
+    setModalOpen(false);
+    setSelectedEntity(null);
+  }, []);
+
+  const handleModalSuccess = useCallback(() => {
+    setModalOpen(false);
+    setSelectedEntity(null);
+  }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Name</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Status</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Color</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Order</th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-widest text-slate-500">Actions</th>
-          </tr>
-        </thead>
-                
-        <tbody className="divide-y divide-slate-100 bg-white">
-          {!isLoading && categories.length > 0 &&
-            categories.map((category) => (
-              <tr key={category.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-sm text-slate-700">{category.name}</td>
-                <td className="px-4 py-3 text-sm text-slate-700">
-                <span className={category.status === 'active' ? 'text-emerald-600' : 'text-rose-600'}>{category.status}</span>
-              </td>
-              <td className="px-4 py-3 text-sm text-slate-700">
-                {category.color ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border" style={{ backgroundColor: category.color }} />
-                    {category.color}
-                  </span>
-                ) : (
-                  '—'
-                )}
-              </td>
-              <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
-              <td className="px-4 py-3 text-right text-sm">
-                <ListActions
-                  showSearch={false}
-                  className="justify-end"
-                  allowEdit={Boolean(onEdit)}
-                  allowRemove={Boolean(onDelete)}
-                  onEdit={() => onEdit?.(category)}
-                  onRemove={() => onDelete?.(category)}
-                />
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-      {captionContent && <div className="px-4 py-3 text-left text-sm text-slate-500">{captionContent}</div>}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          title="Categories"
+          total={pagination.total}
+          isLoading={isLoading}
+          isEmpty={entities.length === 0}
+        />
+        <Button onClick={handleCreate} className="flex items-center gap-2">
+          <PlusIcon className="h-4 w-4" />
+          New Category
+        </Button>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-slate-200">
+          {isLoading && (
+            <caption className="px-4 py-3 text-left text-sm text-slate-500">
+              <TableLoading className="!border-0 !bg-transparent !px-0 !py-0" />
+            </caption>
+          )}
+          {!isLoading && entities.length === 0 && (
+            <caption className="px-4 py-3 text-left text-sm text-slate-500">
+              <TableEmptyState className="!border-0 !bg-transparent !px-0 !py-0" />
+            </caption>
+          )}
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Color
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Order
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {!isLoading && entities.length > 0 &&
+              entities.map((category) => (
+                <tr key={category.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="text-sm font-medium text-slate-900">{category.name}</div>
+                    {category.description && (
+                      <div className="text-xs text-slate-500">{category.description}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                        category.status === 'active'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-rose-100 text-rose-700'
+                      )}
+                    >
+                      {category.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-700">
+                    {category.color ? (
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="h-4 w-4 rounded-full border border-slate-300"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span className="text-xs font-mono">{category.color}</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
+                  <td className="px-4 py-3 text-right text-sm">
+                    <ListActionButtons
+                      dropdown={false}
+                      edit
+                      remove
+                      onEdit={() => handleEdit(category)}
+                      onRemove={() => handleDeleteClick(category)}
+                    />
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      {pagination.pages > 1 && (
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.pages}
+          totalItems={pagination.total}
+          pageSize={pagination.per_page}
+          from={pagination.from}
+          to={pagination.to}
+          onPageChange={onPageChanged}
+          onPageSizeChange={() => onPageChanged(1)}
+        />
+      )}
+
+      <CategoryFormModal
+        isOpen={modalOpen}
+        mode={modalMode}
+        category={selectedEntity ?? undefined}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        title="Delete Category"
+        description={`Are you sure you want to delete "${categoryToDelete?.name ?? ''}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={isDeleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setDeleteConfirmOpen(false);
+          setCategoryToDelete(null);
+        }}
+      />
     </div>
   );
 };

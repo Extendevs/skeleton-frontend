@@ -64,10 +64,10 @@ export interface ICrudActions<T> {
     pristine: () => void;
 
     // CRUD operations
-    save: () => Promise<T | null>;
-    update: () => Promise<T | null>;
-    delete: (id: string | number) => Promise<boolean>;
-    restore: (id: string | number) => Promise<T | null>;
+    save: () => void;
+    update: () => void;
+    delete: (id: string | number) => void;
+    restore: (id: string | number) => void;
 
     // Validation
     validate: () => boolean;

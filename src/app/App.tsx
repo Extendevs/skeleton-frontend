@@ -3,7 +3,7 @@ import { ProtectedRoute } from '../auth/components/ProtectedRoute';
 import { PublicRoute } from '../auth/components/PublicRoute';
 import { LoginPage } from '../auth/pages/LoginPage';
 import { AppLayout } from './AppLayout';
-import { CategoriesPage } from '../modules/categories/CategoriesPage';
+import { CategoriesListPage } from '../modules/categories/CategoriesListPage';
 
 export const App = (): JSX.Element => {
   return (
@@ -27,8 +27,8 @@ export const App = (): JSX.Element => {
       >
         <Route index element={<Navigate to="/categories" replace />} />
         <Route path="categories">
-          <Route index element={<CategoriesPage />} />
-          <Route path=":categoryId" element={<CategoriesPage />} />
+          <Route index element={<CategoriesListPage />} />
+          <Route path=":categoryId" element={<CategoriesListPage />} />
         </Route>
       </Route>
 

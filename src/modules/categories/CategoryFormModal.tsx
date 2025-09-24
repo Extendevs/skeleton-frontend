@@ -1,16 +1,18 @@
+import { useCallback, useMemo, useState } from 'react';
 import { Category } from './schema';
 import { CategoryForm } from './CategoryForm';
 import { Modal } from '../../shared/components/Modal';
-import type { CategoriesResource } from './useCategories';
+import { CrudMode } from '../../core/enums/CrudMode';
+import { CategoryResource } from './services/CategoryResource';
+import { useCategoryStore } from './store/categoryStore';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
-  mode: 'create' | 'edit';
+  mode: CrudMode;
   category?: Category | null;
   onClose: () => void;
   onSuccess?: (category: Category) => void;
   onError?: (error: unknown) => void;
-  resource: CategoriesResource;
 }
 
 export const CategoryFormModal = ({
@@ -19,16 +21,52 @@ export const CategoryFormModal = ({
   category,
   onClose,
   onSuccess,
-  onError,
-  resource
+  onError
 }: CategoryFormModalProps) => {
-  const handleSuccess = (result: Category) => {
-    onSuccess?.(result);
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const initialData = useMemo(() => {
+    if (mode === CrudMode.EDIT && category) {
+      return {
+        ...category,
+        description: category.description ?? '',
+        color: category.color ?? ''
+      };
+    }
+    return {
+      name: '',
+      status: 'active' as const,
+      displayOrder: 0,
+      description: '',
+      color: ''
+    } satisfies Partial<Category>;
+  }, [mode, category]);
 
-  const handleError = (error: unknown) => {
-    onError?.(error);
-  };
+  const addEntity = useCategoryStore((state) => state.addEntity);
+  const updateEntity = useCategoryStore((state) => state.updateEntity);
+
+  const handleSubmit = useCallback(async (values: Partial<Category>) => {
+    setIsSubmitting(true);
+
+    try {
+      let result: Category;
+      if (mode === CrudMode.EDIT && category) {
+        // Pass existing category data to preserve API fields
+        result = await CategoryResource.update(category.id, values, category);
+        updateEntity(result);
+      } else {
+        result = await CategoryResource.create(values);
+        addEntity(result);
+      }
+      
+      onSuccess?.(result);
+      onClose();
+    } catch (error) {
+      onError?.(error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [mode, category, addEntity, updateEntity, onSuccess, onError, onClose]);
 
   if (!isOpen) {
     return null;
@@ -38,15 +76,14 @@ export const CategoryFormModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${mode === 'edit' ? 'Edit' : 'New'} Category`}
+      title={mode === CrudMode.EDIT ? 'Edit Category' : 'New Category'}
     >
       <CategoryForm
         mode={mode}
-        category={category}
-        resource={resource}
-        onSuccess={handleSuccess}
-        onError={handleError}
+        category={initialData as Category}
+        onSubmit={handleSubmit}
         onCancel={onClose}
+        isSubmitting={isSubmitting}
       />
     </Modal>
   );

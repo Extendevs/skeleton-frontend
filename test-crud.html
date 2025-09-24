@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CRUD Operations</title>
+</head>
+<body>
+    <h1>Testing Categories CRUD</h1>
+    <button onclick="testCreate()">Test Create</button>
+    <button onclick="testList()">Test List</button>
+    <button onclick="testUpdate()">Test Update</button>
+    <button onclick="testDelete()">Test Delete</button>
+    <pre id="result"></pre>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/category';
+        const resultDiv = document.getElementById('result');
+        let lastCreatedId = null;
+
+        async function testCreate() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Category ' + Date.now(),
+                        description: 'Test description',
+                        status: 'active',
+                        displayOrder: 1,
+                        color: '#FF0000'
+                    })
+                });
+                const data = await response.json();
+                lastCreatedId = data.id;
+                resultDiv.textContent = 'CREATE SUCCESS:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'CREATE ERROR:\n' + error.message;
+            }
+        }
+
+        async function testList() {
+            try {
+                const response = await fetch(API_URL + '?page=1&limit=10');
+                const data = await response.json();
+                resultDiv.textContent = 'LIST SUCCESS:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'LIST ERROR:\n' + error.message;
+            }
+        }
+
+        async function testUpdate() {
+            if (!lastCreatedId) {
+                resultDiv.textContent = 'Please create a category first';
+                return;
+            }
+            try {
+                const response = await fetch(API_URL + '/' + lastCreatedId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Updated Category ' + Date.now(),
+                        description: 'Updated description',
+                        status: 'inactive',
+                        displayOrder: 2,
+                        color: '#00FF00'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.textContent = 'UPDATE SUCCESS:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'UPDATE ERROR:\n' + error.message;
+            }
+        }
+
+        async function testDelete() {
+            if (!lastCreatedId) {
+                resultDiv.textContent = 'Please create a category first';
+                return;
+            }
+            try {
+                const response = await fetch(API_URL + '/' + lastCreatedId, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    resultDiv.textContent = 'DELETE SUCCESS: Category deleted';
+                    lastCreatedId = null;
+                } else {
+                    resultDiv.textContent = 'DELETE FAILED: ' + response.statusText;
+                }
+            } catch (error) {
+                resultDiv.textContent = 'DELETE ERROR:\n' + error.message;
+            }
+        }
+
+        // Test list on load
+        testList();
+    </script>
+</body>
+</html>
