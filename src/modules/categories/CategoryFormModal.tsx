@@ -48,14 +48,17 @@ export const CategoryFormModal = ({
     setIsSubmitting(true);
 
     try {
-      let result: Category;
+      let result: any;
       if (mode === CrudMode.EDIT && category) {
-        // Pass existing category data to preserve API fields
-        result = await CategoryResource.update(category.id, values, category);
-        updateEntity(result);
+        result = await CategoryResource.update(category.id, values);
+        // Update with the response data or use the category with updated values
+        const updatedCategory = { ...category, ...values };
+        updateEntity(updatedCategory);
       } else {
         result = await CategoryResource.create(values);
-        addEntity(result);
+        // Add with the response data or create a temp category
+        const newCategory = result.data || result || { ...values, id: Date.now().toString() };
+        addEntity(newCategory);
       }
       
       onSuccess?.(result);
