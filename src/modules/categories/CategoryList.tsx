@@ -29,7 +29,7 @@ export const CategoryList = () => {
   // Verificar permisos múltiples de una vez
   const permissions = useMultiplePermissions({
     canCreate: 'create.category',
-    canEdit: 'edit.category',
+    canEdit: 'update.category',
     canDelete: 'delete.category',
     canReport: 'report.category',
     canRestore: 'restore.category'

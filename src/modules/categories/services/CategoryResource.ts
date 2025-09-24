@@ -5,5 +5,5 @@ import { ICategory, CategoryFormValues } from '../schema';
  * Category Resource - API methods simple
  */
 export const CategoryResource = createCrudApi<ICategory, CategoryFormValues>({
-    basePath: '/order'
+    basePath: '/category'
 });

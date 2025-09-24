@@ -1,10 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ICategory, CategoryFormValues } from './schema';
+import { useMemo } from 'react';
+import { ICategory } from './schema';
 import { CategoryForm } from './CategoryForm';
 import { Modal } from '../../shared/components/Modal';
 import { CrudMode } from '../../core/enums/CrudMode';
-import { CategoryResource } from './services/CategoryResource';
-import { useCategoryStore } from './store/categoryStore';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -12,7 +10,6 @@ interface CategoryFormModalProps {
   category?: ICategory | null;
   onClose: () => void;
   onSuccess?: (category: ICategory) => void;
-  onError?: (error: unknown) => void;
 }
 
 export const CategoryFormModal = ({
@@ -20,10 +17,8 @@ export const CategoryFormModal = ({
   mode,
   category,
   onClose,
-  onSuccess,
-  onError
+  onSuccess
 }: CategoryFormModalProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (mode === CrudMode.EDIT && category) {
       return {
@@ -41,35 +36,10 @@ export const CategoryFormModal = ({
     } satisfies Partial<ICategory>;
   }, [mode, category]);
 
-  const addEntity = useCategoryStore((state) => state.addEntity);
-  const updateEntity = useCategoryStore((state) => state.updateEntity);
-
-  const handleSubmit = useCallback(async (values: CategoryFormValues) => {
-    setIsSubmitting(true);
-
-    try {
-      let result: any;
-      if (mode === CrudMode.EDIT && category) {
-        result = await CategoryResource.update(category.id, values);
-        // Update with the response data or use the category with updated values
-        const updatedCategory = { ...category, ...values };
-        updateEntity(updatedCategory);
-      } else {
-        result = await CategoryResource.create(values);
-        // Add with the response data or create a temp category
-        const newCategory = result.data || result || { ...values, id: Date.now().toString() };
-        addEntity(newCategory);
-      }
-      
-      onSuccess?.(result);
-      onClose();
-    } catch (error) {
-      onError?.(error);
-      throw error;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [mode, category, addEntity, updateEntity, onSuccess, onError, onClose]);
+  const handleSuccess = (result: ICategory) => {
+    onSuccess?.(result);
+    onClose();
+  };
 
   if (!isOpen) {
     return null;
@@ -83,10 +53,9 @@ export const CategoryFormModal = ({
     >
       <CategoryForm
         mode={mode}
-        category={initialData as ICategory}
-        onSubmit={handleSubmit}
+        category={initialData}
+        onSuccess={handleSuccess}
         onCancel={onClose}
-        isSubmitting={isSubmitting}
       />
     </Modal>
   );

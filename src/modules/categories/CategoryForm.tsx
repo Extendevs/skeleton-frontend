@@ -14,20 +14,21 @@ import {
 } from '../../shared/ui/select';
 import { CrudMode } from '../../core/enums/CrudMode';
 import { ICategory, categoryFormSchema, CategoryFormValues } from './schema';
+import { useBaseCrud } from '../../core/hooks/useBaseCrud';
+import { useCategoryStore } from './store/categoryStore';
+import { CategoryResource } from './services/CategoryResource';
 
 interface CategoryFormProps {
   mode: CrudMode;
   category?: Partial<ICategory>;
-  isSubmitting?: boolean;
-  onSubmit: (values: CategoryFormValues) => Promise<void> | void;
+  onSuccess?: (category: ICategory) => void;
   onCancel?: () => void;
 }
 
 export const CategoryForm = ({
   mode,
   category,
-  isSubmitting = false,
-  onSubmit,
+  onSuccess,
   onCancel
 }: CategoryFormProps) => {
   const defaultValues = useMemo<CategoryFormValues>(() => ({
@@ -37,6 +38,19 @@ export const CategoryForm = ({
     color: category?.color ?? '',
     displayOrder: category?.displayOrder ?? 0
   }), [category]);
+
+  // Use useBaseCrud for all CRUD logic
+  const crud = useBaseCrud<ICategory>({
+    store: useCategoryStore,
+    resource: {
+      save: CategoryResource.create,
+      update: CategoryResource.update,
+      delete: CategoryResource.remove
+    },
+    mode,
+    entityId: category?.id,
+    initialData: category
+  });
 
   const {
     register,
@@ -49,14 +63,20 @@ export const CategoryForm = ({
   });
 
   const onFormSubmit = handleSubmit(async (values) => {
-    await onSubmit(values);
+    try {
+      const result = await crud.submit(values);
+      onSuccess?.(result);
+    } catch (error) {
+      // Error handling can be done here or passed up
+      throw error;
+    }
   });
 
   return (
     <form className="space-y-4" onSubmit={onFormSubmit}>
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
-        <Input id="name" {...register('name')} disabled={isSubmitting} />
+        <Input id="name" {...register('name')} disabled={crud.store.isSaving} />
         {errors.name && <p className="text-xs text-rose-600">{errors.name.message}</p>}
       </div>
 
@@ -66,7 +86,7 @@ export const CategoryForm = ({
           id="description"
           rows={3}
           {...register('description')}
-          disabled={isSubmitting}
+          disabled={crud.store.isSaving}
         />
         {errors.description && <p className="text-xs text-rose-600">{errors.description.message}</p>}
       </div>
@@ -80,7 +100,7 @@ export const CategoryForm = ({
               // @ts-ignore - control has setValue method
               control.setValue('status', value as 'active' | 'inactive');
             }}
-            disabled={isSubmitting}
+            disabled={crud.store.isSaving}
           >
             <SelectTrigger id="status">
               <SelectValue />
@@ -99,7 +119,7 @@ export const CategoryForm = ({
             id="color"
             placeholder="#000000"
             {...register('color')}
-            disabled={isSubmitting}
+            disabled={crud.store.isSaving}
           />
           {errors.color && <p className="text-xs text-rose-600">{errors.color.message}</p>}
         </div>
@@ -110,7 +130,7 @@ export const CategoryForm = ({
             id="displayOrder"
             type="number"
             {...register('displayOrder', { valueAsNumber: true })}
-            disabled={isSubmitting}
+            disabled={crud.store.isSaving}
           />
           {errors.displayOrder && (
             <p className="text-xs text-rose-600">{errors.displayOrder.message}</p>
@@ -120,12 +140,12 @@ export const CategoryForm = ({
 
       <div className="flex items-center justify-end gap-3 pt-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={crud.store.isSaving}>
+          Cancel
+        </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting
+        <Button type="submit" disabled={crud.store.isSaving}>
+          {crud.store.isSaving
             ? mode === CrudMode.EDIT
               ? 'Updating...'
               : 'Creating...'
