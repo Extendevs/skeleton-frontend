@@ -1,9 +1,9 @@
+/* Import Lemon UI variables first */
+@import './styles/lemon-ui-vars.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Lemon UI variables */
-@import './styles/lemon-ui-vars.css';
 
 :root {
   color-scheme: light;

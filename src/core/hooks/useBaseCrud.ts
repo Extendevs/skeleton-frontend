@@ -140,25 +140,6 @@ export function useBaseCrud<T extends IEntity>(config: UseBaseCrudConfig<T>) {
         }
     }, [config.resource, config.entityId, store]);
 
-    // Restore
-    const onRestore = useCallback(async (id?: string | number) => {
-        if (!config.resource.restore) return;
-
-        const entityId = id || config.entityId || store.selectId;
-        if (!entityId) return;
-
-        try {
-            const response = await config.resource.restore(entityId as string);
-            store.updateEntity({
-                id: entityId,
-                deleted_at: null,
-                ...response.data
-            } as any);
-        } catch (error) {
-            throw error;
-        }
-    }, [config.resource, config.entityId, store]);
-
     return {
         // State
         store,
@@ -171,7 +152,6 @@ export function useBaseCrud<T extends IEntity>(config: UseBaseCrudConfig<T>) {
         onUpdate,
         submit,
         onDelete,
-        onRestore,
 
         // Utils
         beforeSave,

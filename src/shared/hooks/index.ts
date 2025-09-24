@@ -17,3 +17,7 @@ export {
     withPermission,
     withRole
 } from '../components/PermissionGuard';
+
+// Performance hooks
+export * from './useOptimizedCallbacks';
+export * from './usePerformanceMonitor';

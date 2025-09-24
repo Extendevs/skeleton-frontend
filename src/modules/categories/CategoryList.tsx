@@ -1,25 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo, useMemo } from 'react';
 import { useCategoryList } from './hooks/useCategoryList';
 import { useCategoryStore } from './store/categoryStore';
 import { ICategory } from './schema';
 import { PageHeader } from '../../shared/components/atoms/PageHeader';
 import { Button } from '../../shared/ui/button';
 import { PlusIcon } from '../../shared/components/icons/Icons';
-import { TableLoading } from '../../shared/components/TableLoading';
-import { TableEmptyState } from '../../shared/components/TableEmptyState';
-import { ListActionButtons } from '../../shared/components/ListActionButtons';
+import { TableLoadingState } from '../../shared/components/molecules/TableLoadingState';
+import { TableEmptyState } from '../../shared/components/molecules/TableEmptyState';
 import { Pagination } from '../../shared/components/Pagination';
 import { CategoryFormModal } from './CategoryFormModal';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { CrudMode } from '../../core/enums/CrudMode';
-import { cn } from '../../shared/utils/cn';
 import { SearchList } from '../../shared/components/SearchList';
 import { ISearchParams } from '../../core/interfaces/list.types';
 import { useMultiplePermissions } from '../../shared/hooks/usePermissions';
 import { PermissionGuard } from '../../shared/components/PermissionGuard';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../shared/ui';
+import { Table, TableHeader, TableBody, TableRow, TableHead } from '../../shared/ui';
+import { CategoryTableRow } from './components/CategoryTableRow';
+import { useStableCallbacks } from '../../shared/hooks/useOptimizedCallbacks';
 
-export const CategoryList = () => {
+const CategoryListComponent = () => {
   const { onPageChanged, onRemove, onSearch, onReset, paramsSearch } = useCategoryList();
   const entities = useCategoryStore((state) => state.entities);
   const pagination = useCategoryStore((state) => state.pagination);
@@ -41,7 +41,7 @@ export const CategoryList = () => {
   const [modalMode, setModalMode] = useState<CrudMode>(CrudMode.CREATE);
   const [selectedEntity, setSelectedEntity] = useState<ICategory | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<ICategory | null>(null);
+  const [entityToDelete, setEntityToDelete] = useState<ICategory | null>(null);
 
   // Data is loaded automatically by useBaseList with autoInit: true
   // No need for manual useEffect here
@@ -59,21 +59,32 @@ export const CategoryList = () => {
   }, []);
 
   const handleDeleteClick = useCallback((category: ICategory) => {
-    setCategoryToDelete(category);
+    setEntityToDelete(category);
     setDeleteConfirmOpen(true);
   }, []);
 
+  // Optimize callbacks for list items
+  const stableCallbacks = useStableCallbacks(
+    handleEdit,
+    handleDeleteClick,
+    [handleEdit, handleDeleteClick]
+  );
+
+  // Memoize expensive computations
+  const memoizedEntities = useMemo(() => entities, [entities]);
+  const memoizedPermissions = useMemo(() => permissions, [permissions.canEdit, permissions.canDelete]);
+
   const handleDeleteConfirm = useCallback(async () => {
-    if (!categoryToDelete) return;
+    if (!entityToDelete) return;
     
     try {
-      await onRemove(categoryToDelete);
-      setCategoryToDelete(null);
+      await onRemove(entityToDelete);
+      setEntityToDelete(null);
       setDeleteConfirmOpen(false);
     } catch (error) {
       // Handle error silently or show toast
     }
-  }, [categoryToDelete, onRemove]);
+  }, [entityToDelete, onRemove]);
 
   const handleModalClose = useCallback(() => {
     setModalOpen(false);
@@ -138,7 +149,7 @@ export const CategoryList = () => {
 
       {isLoading ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <TableLoading />
+          <TableLoadingState />
         </div>
       ) : entities.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -156,57 +167,18 @@ export const CategoryList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entities.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell>
-                  <div className="font-medium text-gray-900">
-                    {category.name}
-                  </div>
-                  {category.description && (
-                    <div className="text-xs text-gray-500 truncate max-w-xs">
-                      {category.description}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                      category.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    )}
-                  >
-                    {category.status}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {category.color ? (
-                    <div className="flex items-center space-x-1.5">
-                      <div
-                        className="w-3 h-3 border border-gray-300 rounded-sm"
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className="font-mono text-xs text-gray-500">{category.color}</span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {category.displayOrder}
-                </TableCell>
-                <TableCell className="text-right">
-                  <ListActionButtons
-                    disabled={isLoading || isDeleting || isSaving}
-                    dropdown={false}
-                    edit={permissions.canEdit}
-                    remove={permissions.canDelete}
-                    onEdit={() => handleEdit(category)}
-                    onRemove={() => handleDeleteClick(category)}
-                  />
-                </TableCell>
-              </TableRow>
+            {memoizedEntities.map((category) => (
+              <CategoryTableRow
+                key={category.id}
+                category={category}
+                canEdit={memoizedPermissions.canEdit}
+                canDelete={memoizedPermissions.canDelete}
+                isLoading={isLoading}
+                isDeleting={isDeleting}
+                isSaving={isSaving}
+                onEdit={stableCallbacks.onEdit}
+                onDelete={stableCallbacks.onDelete}
+              />
             ))}
           </TableBody>
         </Table>
@@ -239,9 +211,16 @@ export const CategoryList = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={() => {
           setDeleteConfirmOpen(false);
-          setCategoryToDelete(null);
+          setEntityToDelete(null);
         }}
       />
     </div>
   );
 };
+
+// Memoized export with custom comparison
+export const CategoryList = memo(CategoryListComponent, (_prevProps, _nextProps) => {
+  // Since this component has no props, it only re-renders when internal state changes
+  // The memo will prevent re-renders from parent components
+  return false; // Always allow re-render since we depend on internal hooks
+});

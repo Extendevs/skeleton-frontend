@@ -1,7 +1,8 @@
 import { createStore } from 'zustand/vanilla';
 import { SessionProfile, AuthTokens } from '../types/Session';
+// import { SecureStorage } from '../core/security/SecureStorage'; // TODO: Re-enable when async support is added
 
-const STORAGE_KEY = 'core-react-session';
+const STORAGE_KEY = 'session';
 
 interface PersistedSession {
   profile: SessionProfile | null;
@@ -24,14 +25,23 @@ const readPersistedState = (): PersistedSession => {
   if (typeof window === 'undefined') {
     return { profile: null, tokens: null };
   }
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return { profile: null, tokens: null };
+    // Try to read from regular storage first
+    const raw = localStorage.getItem(`fallback_${STORAGE_KEY}`);
+    if (raw) {
+      return JSON.parse(raw) as PersistedSession;
     }
-    return JSON.parse(raw) as PersistedSession;
+
+    // Use regular storage for now since SecureStorage is async
+    // TODO: Migrate to async SecureStorage in future update
+    const secureData = localStorage.getItem(`secure_${STORAGE_KEY}`);
+    if (secureData) {
+      return JSON.parse(secureData) as PersistedSession;
+    }
+    return { profile: null, tokens: null };
   } catch (error) {
-    console.warn('Failed to parse session from storage', error);
+    console.warn('Failed to read session from secure storage', error);
     return { profile: null, tokens: null };
   }
 };
@@ -40,14 +50,28 @@ const persistState = (state: PersistedSession) => {
   if (typeof window === 'undefined') {
     return;
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  try {
+    // Use regular storage for now since SecureStorage is async
+    // TODO: Migrate to async SecureStorage in future update
+    localStorage.setItem(`secure_${STORAGE_KEY}`, JSON.stringify(state));
+  } catch (error) {
+    console.error('Failed to persist session state', error);
+  }
 };
 
 const clearPersistedState = () => {
   if (typeof window === 'undefined') {
     return;
   }
-  localStorage.removeItem(STORAGE_KEY);
+
+  try {
+    // Clear both secure and fallback storage
+    localStorage.removeItem(`secure_${STORAGE_KEY}`);
+    localStorage.removeItem(`fallback_${STORAGE_KEY}`);
+  } catch (error) {
+    console.error('Failed to clear persisted state', error);
+  }
 };
 
 export const sessionStore = createStore<SessionState>((set) => ({

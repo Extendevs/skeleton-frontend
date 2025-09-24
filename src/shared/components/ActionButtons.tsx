@@ -82,7 +82,7 @@ export const ActionButtons = ({
           size="sm"
           onClick={onEdit}
           className="h-8 w-8 p-0"
-          title="Edit"
+          title="Editar"
         >
           <EditIcon />
         </Button>
@@ -93,7 +93,7 @@ export const ActionButtons = ({
           size="sm"
           onClick={onDelete}
           className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-          title="Delete"
+          title="Eliminar"
         >
           <TrashIcon />
         </Button>

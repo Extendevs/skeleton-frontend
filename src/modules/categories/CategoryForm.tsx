@@ -137,7 +137,7 @@ export const CategoryForm = ({
                 value={watch('status')}
                 onValueChange={(value) => {
                   // @ts-ignore - control has setValue method
-                  control.setValue('status', value as 'active' | 'inactive');
+                  (control as any).setValue('status', value as 'active' | 'inactive');
                 }}
                 disabled={crud.store.isSaving}
               >
@@ -178,7 +178,7 @@ export const CategoryForm = ({
                   placeholder="#000000"
                   className="font-mono text-xs"
                   value={watch('color')}
-                  onChange={(e) => control.setValue('color', e.target.value)}
+                  onChange={(e) => (control as any).setValue('color', e.target.value)}
                   disabled={crud.store.isSaving}
                 />
               </div>
