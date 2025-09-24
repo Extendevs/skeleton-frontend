@@ -13,13 +13,13 @@ import {
   PlusIcon,
   PrintIcon,
   RestoreIcon,
-  CheckIcon,
   MinusIcon
 } from './icons/Icons';
 
 interface ListActionButtonsProps {
   // Display options
   dropdown?: boolean;
+  disabled?: boolean;
   
   // Action flags
   print?: boolean;
@@ -50,6 +50,7 @@ interface ListActionButtonsProps {
  * Based on Angular ListActionButtons
  */
 export const ListActionButtons = ({
+  disabled = false,
   dropdown = false,
   print = false,
   detail = false,
@@ -88,6 +89,7 @@ export const ListActionButtons = ({
               </DropdownMenuItem>
             ) : (
               <Button
+                disabled={disabled}
                 variant="ghost"
                 size="sm"
                 onClick={onPrint}
@@ -108,6 +110,7 @@ export const ListActionButtons = ({
               </DropdownMenuItem>
             ) : (
               <Button
+                disabled={disabled}
                 variant="ghost"
                 size="sm"
                 onClick={onDetail}
@@ -128,6 +131,7 @@ export const ListActionButtons = ({
               </DropdownMenuItem>
             ) : (
               <Button
+                disabled={disabled}
                 variant="ghost"
                 size="sm"
                 onClick={onEdit}
@@ -168,6 +172,7 @@ export const ListActionButtons = ({
               </DropdownMenuItem>
             ) : (
               <Button
+                disabled={disabled}
                 variant="ghost"
                 size="sm"
                 onClick={onRemove}
@@ -228,7 +233,7 @@ export const ListActionButtons = ({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={disabled}>
             <MoreVerticalIcon />
           </Button>
         </DropdownMenuTrigger>

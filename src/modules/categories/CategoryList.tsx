@@ -24,6 +24,7 @@ export const CategoryList = () => {
   const pagination = useCategoryStore((state) => state.pagination);
   const isLoading = useCategoryStore((state) => state.isLoading);
   const isDeleting = useCategoryStore((state) => state.isDeleting);
+  const isSaving = useCategoryStore((state) => state.isSaving);
 
 
   // Verificar permisos múltiples de una vez
@@ -203,6 +204,7 @@ export const CategoryList = () => {
                   <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
              <td className="px-4 py-3 text-right text-sm">
                <ListActionButtons
+                 disabled={isLoading || isDeleting || isSaving}
                  dropdown={false}
                  edit={permissions.canEdit}
                  remove={permissions.canDelete}
@@ -240,10 +242,6 @@ export const CategoryList = () => {
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
-        title="Delete Category"
-        description={`Are you sure you want to delete "${categoryToDelete?.name ?? ''}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
         isLoading={isDeleting}
         onConfirm={handleDeleteConfirm}
         onCancel={() => {
