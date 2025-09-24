@@ -27,10 +27,10 @@ interface ConfirmDialogProps {
  */
 export const ConfirmDialog = ({
   isOpen,
-  title = 'Delete Record',
-  description = 'Are you sure you want to continue?',
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  title = 'Eliminar Registro',
+  description = '¿Estás seguro de que quieres continuar?',
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
   isLoading = false,
   onConfirm,
   onCancel
@@ -41,7 +41,7 @@ export const ConfirmDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>
-            {description || 'Are you sure you want to continue?'}
+            {description || '¿Estás seguro de que quieres continuar?'}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -53,7 +53,7 @@ export const ConfirmDialog = ({
             disabled={isLoading}
             className="bg-rose-600 hover:bg-rose-500"
           >
-            {isLoading ? 'Processing...' : confirmLabel}
+            {isLoading ? 'Procesando...' : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

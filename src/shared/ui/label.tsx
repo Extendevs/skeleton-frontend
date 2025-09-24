@@ -32,7 +32,7 @@ const Label = React.forwardRef<
       <span
         aria-hidden="true"
         className="ml-0.5 text-red-600 select-none"
-        title="Required"
+        title="Requerido"
       >
         *
       </span>

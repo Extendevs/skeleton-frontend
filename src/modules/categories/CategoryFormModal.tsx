@@ -32,7 +32,7 @@ export const CategoryFormModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={mode === CrudMode.EDIT ? 'Edit Category' : 'New Category'}
+      title={mode === CrudMode.EDIT ? 'Editar Categoría' : 'Nueva Categoría'}
     >
       <CategoryForm
         mode={mode}

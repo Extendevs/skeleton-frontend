@@ -77,7 +77,7 @@ export const Pagination = ({
       {/* Info */}
       {showInfo && (
         <div className="text-sm text-slate-600">
-          Showing {from || 0} to {to || 0} of {totalItems} results
+          Mostrando {from || 0} a {to || 0} de {totalItems} resultados
         </div>
       )}
 
@@ -85,7 +85,7 @@ export const Pagination = ({
         {/* Page Size Selector */}
         {showPageSize && onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Show:</span>
+            <span className="text-sm text-slate-600">Mostrar:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}

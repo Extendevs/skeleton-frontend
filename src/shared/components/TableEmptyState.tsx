@@ -7,8 +7,8 @@ interface TableEmptyStateProps {
 }
 
 export const TableEmptyState = ({
-  title = 'Nothing here yet',
-  description = 'Try adjusting your filters or add a new record to get started.',
+  title = 'No hay datos aún',
+  description = 'Intenta ajustar tus filtros o agregar un nuevo registro para comenzar.',
   actionLabel,
   onAction,
   className

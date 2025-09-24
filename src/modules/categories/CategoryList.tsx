@@ -105,7 +105,7 @@ export const CategoryList = () => {
         <PermissionGuard permission="create.category">
           <Button onClick={handleCreate} className="flex items-center gap-2">
             <PlusIcon className="h-4 w-4" />
-            New Category
+            Nueva Categoría
           </Button>
         </PermissionGuard>
       </div>
@@ -115,22 +115,22 @@ export const CategoryList = () => {
         paramsSearch={paramsSearch}
         onSearch={handleSearch}
         onReset={handleSearchReset}
-        placeholder="Search categories..."
+        placeholder="Buscar categorías..."
       >
         {/* Additional filters can be added here */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Status
+              Estado
             </label>
             <select 
               name="status"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               defaultValue=""
             >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="">Todos los Estados</option>
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
             </select>
           </div>
         </div>
@@ -148,11 +148,11 @@ export const CategoryList = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Estado</TableHead>
               <TableHead>Color</TableHead>
-              <TableHead>Order</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Orden</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -5,8 +5,8 @@ interface TableLoadingProps {
 }
 
 export const TableLoading = ({
-  message = 'Loading records…',
-  description = 'This should only take a moment.',
+  message = 'Cargando registros…',
+  description = 'Esto solo tomará un momento.',
   className
 }: TableLoadingProps): JSX.Element => {
   return (

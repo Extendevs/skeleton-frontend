@@ -97,11 +97,11 @@ export const CategoryForm = ({
         <div className="space-y-5">
           <div className="space-y-1">
             <Label htmlFor="name" required={true}>
-              Category Name 
+              Nombre de Categoría 
             </Label>
             <Input 
               id="name" 
-              placeholder="Enter category name"
+              placeholder="Ingresa el nombre de la categoría"
               className="mt-1"
               {...register('name')} 
               disabled={crud.store.isSaving} 
@@ -111,11 +111,11 @@ export const CategoryForm = ({
 
           <div className="space-y-1">
             <Label htmlFor="description">
-              Description
+              Descripción
             </Label>
             <Textarea
               id="description"
-              placeholder="Describe this category (optional)"
+              placeholder="Describe esta categoría (opcional)"
               rows={3}
               className="mt-1 resize-none"
               {...register('description')}
@@ -127,11 +127,11 @@ export const CategoryForm = ({
 
         {/* Configuration Section */}
         <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-base font-medium text-gray-900 mb-4">Configuration</h4>
+          <h4 className="text-base font-medium text-gray-900 mb-4">Configuración</h4>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div className="space-y-1">
               <Label htmlFor="status" required={true}>
-                Status 
+                Estado 
               </Label>
               <Select
                 value={watch('status')}
@@ -142,19 +142,19 @@ export const CategoryForm = ({
                 disabled={crud.store.isSaving}
               >
                 <SelectTrigger id="status" className="mt-1">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Selecciona el estado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">
                     <div className="flex items-center">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      Active
+                      Activo
                     </div>
                   </SelectItem>
                   <SelectItem value="inactive">
                     <div className="flex items-center">
                       <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                      Inactive
+                      Inactivo
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -187,7 +187,7 @@ export const CategoryForm = ({
 
             <div className="space-y-1">
               <Label htmlFor="displayOrder" required={true}>
-                Display Order
+                Orden de Visualización
               </Label>
               <Input
                 id="displayOrder"
@@ -199,7 +199,7 @@ export const CategoryForm = ({
                 {...register('displayOrder', { valueAsNumber: true })}
                 disabled={crud.store.isSaving}
               />
-              <p className="text-xs text-gray-500">Lower numbers appear first</p>
+              <p className="text-xs text-gray-500">Los números menores aparecen primero</p>
               <FormInputError error={errors.displayOrder} />
             </div>
           </div>
@@ -217,7 +217,7 @@ export const CategoryForm = ({
                   disabled={crud.store.isSaving}
                   className="min-w-[80px]"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
               )}
               <Button 
@@ -227,11 +227,11 @@ export const CategoryForm = ({
               >
                 {crud.store.isSaving
                   ? mode === CrudMode.EDIT
-                    ? 'Updating...'
-                    : 'Creating...'
+                    ? 'Actualizando...'
+                    : 'Creando...'
                   : mode === CrudMode.EDIT
-                  ? 'Update Category'
-                  : 'Create Category'}
+                  ? 'Actualizar Categoría'
+                  : 'Crear Categoría'}
               </Button>
             </div>
           </div>

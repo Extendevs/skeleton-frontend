@@ -28,7 +28,7 @@ export const SearchList = ({
   showSearchBar = true,
   searchAction = true,
   disabled = false,
-  placeholder = 'Search...',
+  placeholder = 'Buscar...',
   children,
   fieldsetChildren,
   onSearch,
@@ -179,7 +179,7 @@ export const SearchList = ({
                         className="px-4 flex items-center gap-2"
                       >
                         <SearchIcon className="h-4 w-4" />
-                        <span className="hidden md:block">Search</span>
+                        <span className="hidden md:block">Buscar</span>
                       </Button>
                     </>
                   )}

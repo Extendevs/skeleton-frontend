@@ -25,34 +25,34 @@ export const FormInputError = ({
   const getErrorMessage = (error: FieldError): string => {
     switch (error.type) {
       case 'required':
-        return 'This field is required';
+        return 'Este campo es requerido';
       
       case 'email':
-        return 'Please enter a valid email address';
+        return 'Por favor ingresa una dirección de email válida';
       
       case 'minLength':
-        return `Minimum length is ${error.message?.split(' ')[4] || 'required'}`;
+        return `La longitud mínima es ${error.message?.split(' ')[4] || 'requerida'}`;
       
       case 'maxLength':
-        return `Maximum length is ${error.message?.split(' ')[4] || 'exceeded'}`;
+        return `La longitud máxima es ${error.message?.split(' ')[4] || 'excedida'}`;
       
       case 'min':
-        return `Minimum value is ${error.message?.split(' ')[4] || 'required'}`;
+        return `El valor mínimo es ${error.message?.split(' ')[4] || 'requerido'}`;
       
       case 'max':
-        return `Maximum value is ${error.message?.split(' ')[4] || 'exceeded'}`;
+        return `El valor máximo es ${error.message?.split(' ')[4] || 'excedido'}`;
       
       case 'pattern':
-        return 'Please enter a valid format';
+        return 'Por favor ingresa un formato válido';
       
       case 'url':
-        return 'Please enter a valid URL';
+        return 'Por favor ingresa una URL válida';
       
       case 'validate':
-        return error.message || 'Invalid value';
+        return error.message || 'Valor inválido';
       
       default:
-        return error.message || 'Invalid field';
+        return error.message || 'Campo inválido';
     }
   };
 
