@@ -5,6 +5,7 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Textarea } from '../../shared/ui/textarea';
 import { Label } from '../../shared/ui/label';
+import { FormInputError } from '../../shared/ui';
 import {
   Select,
   SelectContent,
@@ -77,7 +78,7 @@ export const CategoryForm = ({
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input id="name" {...register('name')} disabled={crud.store.isSaving} />
-        {errors.name && <p className="text-xs text-rose-600">{errors.name.message}</p>}
+        <FormInputError error={errors.name} disabled={crud.store.isSaving} />
       </div>
 
       <div className="space-y-2">
@@ -88,7 +89,7 @@ export const CategoryForm = ({
           {...register('description')}
           disabled={crud.store.isSaving}
         />
-        {errors.description && <p className="text-xs text-rose-600">{errors.description.message}</p>}
+        <FormInputError error={errors.description} disabled={crud.store.isSaving} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -110,7 +111,7 @@ export const CategoryForm = ({
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          {errors.status && <p className="text-xs text-rose-600">{errors.status.message}</p>}
+          <FormInputError error={errors.status} disabled={crud.store.isSaving} />
         </div>
 
         <div className="space-y-2">
@@ -121,7 +122,7 @@ export const CategoryForm = ({
             {...register('color')}
             disabled={crud.store.isSaving}
           />
-          {errors.color && <p className="text-xs text-rose-600">{errors.color.message}</p>}
+          <FormInputError error={errors.color} disabled={crud.store.isSaving} />
         </div>
 
         <div className="space-y-2">
@@ -132,9 +133,7 @@ export const CategoryForm = ({
             {...register('displayOrder', { valueAsNumber: true })}
             disabled={crud.store.isSaving}
           />
-          {errors.displayOrder && (
-            <p className="text-xs text-rose-600">{errors.displayOrder.message}</p>
-          )}
+          <FormInputError error={errors.displayOrder} disabled={crud.store.isSaving} />
         </div>
       </div>
 
