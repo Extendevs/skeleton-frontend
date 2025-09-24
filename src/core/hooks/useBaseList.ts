@@ -31,9 +31,12 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
     );
 
     // Build params for API
-    const buildParams = useCallback((overrides?: { page?: number; limit?: number }) => {
+    const buildParams = useCallback((overrides?: { page?: number; limit?: number }, searchOverrides?: Partial<ISearchParams>) => {
         const pagination = overrides ? { ...store.pagination, ...overrides } : store.pagination;
         const { page, limit } = pagination;
+
+        // Use search overrides if provided, otherwise use current paramsSearch
+        const currentSearch = searchOverrides ? { ...paramsSearch, ...searchOverrides } : paramsSearch;
 
         const params: any = {
             page,
@@ -41,37 +44,32 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
             ...(config.overrideParams || {})
         };
 
-        if (paramsSearch.search?.value) {
+        if (currentSearch.search?.value) {
             params.search = {
-                value: paramsSearch.search.value.trim(),
+                value: currentSearch.search.value.trim(),
                 case_sensitive: false
             };
         }
 
-        if (paramsSearch.filters?.length) {
-            params.filters = paramsSearch.filters;
+        if (currentSearch.filters?.length) {
+            params.filters = currentSearch.filters;
         }
 
-        if (paramsSearch.sort?.length) {
-            params.sort = paramsSearch.sort;
+        if (currentSearch.sort?.length) {
+            params.sort = currentSearch.sort;
         }
 
         return params;
     }, [store.pagination, paramsSearch, config.overrideParams]);
 
     // Get list
-    const getList = useCallback(async (paramOverrides?: { page?: number; limit?: number }) => {
+    const getList = useCallback(async (paramOverrides?: { page?: number; limit?: number }, searchOverrides?: Partial<ISearchParams>) => {
         store.putLoading(true);
         store.putNotFound(false);
 
         try {
-            const params = buildParams(paramOverrides);
-            console.log('useBaseList: getList called with params:', params);
-            console.log('useBaseList: paramOverrides:', paramOverrides);
-            const response = await config.resource.list(params);
-            console.log('useBaseList: API response:', response);
-            console.log('useBaseList: response.meta:', response.meta);
-            console.log('useBaseList: response structure:', Object.keys(response));
+            const params = buildParams(paramOverrides, searchOverrides);
+            const response = await config.resource.search(params);
 
             store.setAllEntities(response.data);
 
@@ -122,17 +120,13 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
                     from: response.data.length > 0 ? (currentPage - 1) * pageSize + 1 : null,
                     to: response.data.length > 0 ? (currentPage - 1) * pageSize + response.data.length : null
                 };
-
-                console.log('useBaseList: No meta in response, calculated pagination');
             }
 
-            console.log('useBaseList: Updating pagination with:', paginationUpdate);
             store.putPagination(paginationUpdate);
             store.putNotFound(response.data.length === 0);
 
             return response;
         } catch (error) {
-            console.error('useBaseList: Error in getList:', error);
             store.removeAllEntities();
             store.putMeta(null);
             throw error;
@@ -147,25 +141,23 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
             setParamsSearch(prev => ({ ...prev, ...search }));
         }
         store.putPagination({ page: 1 });
-        return getList({ page: 1 });
+        return getList({ page: 1 }, search);
     }, [store, getList]);
 
     // Reset
     const onReset = useCallback(() => {
-        setParamsSearch({
+        const resetSearch = {
             search: null,
             filters: [],
             sort: []
-        });
+        };
+        setParamsSearch(resetSearch);
         store.putPagination({ page: 1 });
-        return getList({ page: 1 });
+        return getList({ page: 1 }, resetSearch);
     }, [store, getList]);
 
     // Page change
     const onPageChanged = useCallback((page: number, limit?: number) => {
-        console.log('useBaseList: onPageChanged called with:', { page, limit });
-        console.log('useBaseList: current pagination:', store.pagination);
-
         const paginationUpdate = {
             page,
             ...(limit ? { limit } : {})
@@ -173,7 +165,6 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
 
         // Update store first
         store.putPagination(paginationUpdate);
-        console.log('useBaseList: new pagination:', store.pagination);
 
         // Call getList with the exact parameters we want to use
         return getList(paginationUpdate);

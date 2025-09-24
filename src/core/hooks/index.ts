@@ -1,22 +1,14 @@
 /**
- * Professional React Hooks Architecture
- * Inspired by Angular's BaseListService and BaseCrudService
+ * Core hooks - Base functionality
  */
 
 // List management
-export { useListManager } from './useListManager';
-export type { ListManager } from './useListManager';
+export { useBaseList } from './useBaseList';
+export type { UseBaseListConfig } from './useBaseList';
 
-// CRUD management
-export { useCrudManager } from './useCrudManager';
-export type { CrudManager } from './useCrudManager';
-
-// Combined CRUD + List resource
-export { useCrudResource } from './useCrudResource';
-export type { CrudResource } from './useCrudResource';
-
-// Other hooks
-export { useCrudSubmit } from './useCrudSubmit';
+// CRUD operations
+export { useBaseCrud } from './useBaseCrud';
+export type { UseBaseCrudConfig } from './useBaseCrud';
 
 // Export types
 export * from '../interfaces/list.types';

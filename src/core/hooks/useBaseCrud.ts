@@ -59,15 +59,12 @@ export function useBaseCrud<T extends IEntity>(config: UseBaseCrudConfig<T>) {
             params = cleanParams(params);
 
             const response = await config.resource.save(params);
-            console.log('useBaseCrud: onSave - API response:', response);
-            console.log('useBaseCrud: onSave - params sent:', params);
 
             // Handle different response formats
             const entity = response?.data || response;
 
             // Ensure entity has an ID
             if (!entity?.id) {
-                console.error('useBaseCrud: onSave - Entity missing ID:', entity);
                 // Generate temporary ID if missing
                 entity.id = entity.id || Date.now().toString();
             }
@@ -98,9 +95,6 @@ export function useBaseCrud<T extends IEntity>(config: UseBaseCrudConfig<T>) {
             params = cleanParams(params);
 
             const response = await config.resource.update(entityId as string, params);
-            console.log('useBaseCrud: onUpdate - API response:', response);
-            console.log('useBaseCrud: onUpdate - params sent:', params);
-            console.log('useBaseCrud: onUpdate - entityId:', entityId);
 
             // Handle different response formats
             const entity = response?.data || response;

@@ -108,11 +108,9 @@ export function createEntityStore<T extends IEntity>(name: string) {
 
                 // Entity operations - exactly like NgRx entity adapter
                 addEntity: (entity) => set(state => {
-                    console.log('EntityStore: addEntity called with:', entity);
                     // Check if entity already exists
                     const exists = state.entities.some(e => e.id === entity.id);
                     if (exists) {
-                        console.log('EntityStore: Entity exists, updating instead');
                         // If exists, update it instead
                         return {
                             entities: state.entities.map(e =>
@@ -120,7 +118,6 @@ export function createEntityStore<T extends IEntity>(name: string) {
                             )
                         };
                     }
-                    console.log('EntityStore: Adding new entity');
                     // If new, add to the beginning
                     return {
                         entities: [entity, ...state.entities],
@@ -153,14 +150,11 @@ export function createEntityStore<T extends IEntity>(name: string) {
 
                 setAllEntities: (entities) => set({ entities }),
 
-                updateEntity: (entity) => set(state => {
-                    console.log('EntityStore: updateEntity called with:', entity);
-                    return {
-                        entities: state.entities.map(e =>
-                            e.id === entity.id ? { ...e, ...entity } : e
-                        )
-                    };
-                }),
+                updateEntity: (entity) => set(state => ({
+                    entities: state.entities.map(e =>
+                        e.id === entity.id ? { ...e, ...entity } : e
+                    )
+                })),
 
                 updateEntities: (ids, changes) => set(state => ({
                     entities: state.entities.map(e =>
