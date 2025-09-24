@@ -18,12 +18,10 @@ import { ICategory, categoryFormSchema, CategoryFormValues } from './schema';
 import { useBaseCrud } from '../../core/hooks/useBaseCrud';
 import { useCategoryStore } from './store/categoryStore';
 import { CategoryResource } from './services/CategoryResource';
+import { IFormProps } from '../../types/Entity';
 
-interface CategoryFormProps {
-  mode: CrudMode;
+interface CategoryFormProps extends IFormProps<ICategory> {
   category?: Partial<ICategory>;
-  onSuccess?: (category: ICategory) => void;
-  onCancel?: () => void;
 }
 
 export const CategoryForm = ({

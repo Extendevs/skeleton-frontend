@@ -1,4 +1,4 @@
-import { createCrudApi } from '../../../core/api/resourceApi';
+import { createCrudApi } from '@/core/api/resourceApi';
 import { ICategory, CategoryFormValues } from '../schema';
 
 /**

@@ -15,26 +15,9 @@ interface CategoryFormModalProps {
 export const CategoryFormModal = ({
   isOpen,
   mode,
-  category,
   onClose,
   onSuccess
 }: CategoryFormModalProps) => {
-  const initialData = useMemo(() => {
-    if (mode === CrudMode.EDIT && category) {
-      return {
-        ...category,
-        description: category.description ?? '',
-        color: category.color ?? ''
-      };
-    }
-    return {
-      name: '',
-      status: 'active' as const,
-      displayOrder: 0,
-      description: '',
-      color: ''
-    } satisfies Partial<ICategory>;
-  }, [mode, category]);
 
   const handleSuccess = (result: ICategory) => {
     onSuccess?.(result);
@@ -53,7 +36,6 @@ export const CategoryFormModal = ({
     >
       <CategoryForm
         mode={mode}
-        category={initialData}
         onSuccess={handleSuccess}
         onCancel={onClose}
       />

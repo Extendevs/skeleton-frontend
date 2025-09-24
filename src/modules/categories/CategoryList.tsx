@@ -156,6 +156,7 @@ export const CategoryList = () => {
               </th>
             </tr>
           </thead>
+          {entities.length > 0 && !isLoading && (
           <tbody className="divide-y divide-slate-100 bg-white">
             {entities.map((category) => (
               <tr key={category.id} className="hover:bg-slate-50 transition-colors">
@@ -204,6 +205,8 @@ export const CategoryList = () => {
               </tr>
             ))}
           </tbody>
+          )}
+
         </table>
         
         {isLoading && (

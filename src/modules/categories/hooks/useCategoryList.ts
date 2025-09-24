@@ -1,4 +1,4 @@
-import { useBaseList } from '../../../core/hooks/useBaseList';
+import { useBaseList } from '@/core/hooks/useBaseList';
 import { useCategoryStore } from '../store/categoryStore';
 import { CategoryResource } from '../services/CategoryResource';
 import { ICategory } from '../schema';

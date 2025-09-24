@@ -1,3 +1,4 @@
+import { CrudMode } from '../core/enums/CrudMode';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -40,4 +41,11 @@ export interface IEntity {
   created_at?: Date | string
   updated_at?: Date | string
   deleted_at?: Date | string | null
+}
+
+export interface IFormProps<T> {
+  entity?: T | null;
+  mode: CrudMode;
+  onCancel?: () => void;
+  onSuccess?: (entity: T) => void;
 }
