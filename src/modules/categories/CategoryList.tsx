@@ -15,6 +15,8 @@ import { CrudMode } from '../../core/enums/CrudMode';
 import { cn } from '../../shared/utils/cn';
 import { SearchList } from '../../shared/components/SearchList';
 import { ISearchParams } from '../../core/interfaces/list.types';
+import { useMultiplePermissions } from '../../shared/hooks/usePermissions';
+import { PermissionGuard } from '../../shared/components/PermissionGuard';
 
 export const CategoryList = () => {
   const { onPageChanged, onRemove, onSearch, onReset, paramsSearch } = useCategoryList();
@@ -22,6 +24,15 @@ export const CategoryList = () => {
   const pagination = useCategoryStore((state) => state.pagination);
   const isLoading = useCategoryStore((state) => state.isLoading);
   const isDeleting = useCategoryStore((state) => state.isDeleting);
+
+  // Verificar permisos múltiples de una vez
+  const permissions = useMultiplePermissions({
+    canCreate: 'create.category',
+    canEdit: 'edit.category',
+    canDelete: 'delete.category',
+    canReport: 'report.category',
+    canRestore: 'restore.category'
+  });
   
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<CrudMode>(CrudMode.CREATE);
@@ -88,10 +99,12 @@ export const CategoryList = () => {
           isLoading={isLoading}
           isEmpty={entities.length === 0}
         />
-        <Button onClick={handleCreate} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
-          New Category
-        </Button>
+        <PermissionGuard permission="create.category">
+          <Button onClick={handleCreate} className="flex items-center gap-2">
+            <PlusIcon className="h-4 w-4" />
+            New Category
+          </Button>
+        </PermissionGuard>
       </div>
 
       {/* Search Component */}
@@ -187,15 +200,15 @@ export const CategoryList = () => {
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
-                  <td className="px-4 py-3 text-right text-sm">
-                    <ListActionButtons
-                      dropdown={false}
-                      edit
-                      remove
-                      onEdit={() => handleEdit(category)}
-                      onRemove={() => handleDeleteClick(category)}
-                    />
-                  </td>
+             <td className="px-4 py-3 text-right text-sm">
+               <ListActionButtons
+                 dropdown={false}
+                 edit={permissions.canEdit}
+                 remove={permissions.canDelete}
+                 onEdit={() => handleEdit(category)}
+                 onRemove={() => handleDeleteClick(category)}
+               />
+             </td>
                 </tr>
               ))
             }
