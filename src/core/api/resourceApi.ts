@@ -19,6 +19,11 @@ export const createCrudApi = <TRecord, TForm = TRecord, TParams = Record<string,
     return mapListResponse ? mapListResponse(data) : data;
   };
 
+  const search = async (params: TParams) => {
+    const { data } = await apiClient.post<PaginatedResponse<TRecord>>(`${basePath}/search`, params);
+    return mapListResponse ? mapListResponse(data) : data;
+  };
+
   const create = async (payload: TForm) => {
     const body = mapCreateInput ? mapCreateInput(payload) : payload;
     const { data } = await apiClient.post<TRecord>(basePath, body);
@@ -36,5 +41,5 @@ export const createCrudApi = <TRecord, TForm = TRecord, TParams = Record<string,
     return id;
   };
 
-  return { list, create, update, remove } as const;
+  return { list, search, create, update, remove } as const;
 };

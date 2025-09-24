@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Category } from './schema';
+import { ICategory, CategoryFormValues } from './schema';
 import { CategoryForm } from './CategoryForm';
 import { Modal } from '../../shared/components/Modal';
 import { CrudMode } from '../../core/enums/CrudMode';
@@ -9,9 +9,9 @@ import { useCategoryStore } from './store/categoryStore';
 interface CategoryFormModalProps {
   isOpen: boolean;
   mode: CrudMode;
-  category?: Category | null;
+  category?: ICategory | null;
   onClose: () => void;
-  onSuccess?: (category: Category) => void;
+  onSuccess?: (category: ICategory) => void;
   onError?: (error: unknown) => void;
 }
 
@@ -38,13 +38,13 @@ export const CategoryFormModal = ({
       displayOrder: 0,
       description: '',
       color: ''
-    } satisfies Partial<Category>;
+    } satisfies Partial<ICategory>;
   }, [mode, category]);
 
   const addEntity = useCategoryStore((state) => state.addEntity);
   const updateEntity = useCategoryStore((state) => state.updateEntity);
 
-  const handleSubmit = useCallback(async (values: Partial<Category>) => {
+  const handleSubmit = useCallback(async (values: CategoryFormValues) => {
     setIsSubmitting(true);
 
     try {
@@ -83,7 +83,7 @@ export const CategoryFormModal = ({
     >
       <CategoryForm
         mode={mode}
-        category={initialData as Category}
+        category={initialData as ICategory}
         onSubmit={handleSubmit}
         onCancel={onClose}
         isSubmitting={isSubmitting}

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useCategoryList } from './hooks/useCategoryList';
 import { useCategoryStore } from './store/categoryStore';
-import { Category } from './schema';
+import { ICategory } from './schema';
 import { PageHeader } from '../../shared/components/atoms/PageHeader';
 import { Button } from '../../shared/ui/button';
 import { PlusIcon } from '../../shared/components/icons/Icons';
@@ -13,9 +13,11 @@ import { CategoryFormModal } from './CategoryFormModal';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { CrudMode } from '../../core/enums/CrudMode';
 import { cn } from '../../shared/utils/cn';
+import { SearchList } from '../../shared/components/SearchList';
+import { ISearchParams } from '../../core/interfaces/list.types';
 
 export const CategoryList = () => {
-  const { onPageChanged, onRemove } = useCategoryList();
+  const { onPageChanged, onRemove, onSearch, onReset, paramsSearch } = useCategoryList();
   const entities = useCategoryStore((state) => state.entities);
   const pagination = useCategoryStore((state) => state.pagination);
   const isLoading = useCategoryStore((state) => state.isLoading);
@@ -23,9 +25,9 @@ export const CategoryList = () => {
   
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<CrudMode>(CrudMode.CREATE);
-  const [selectedEntity, setSelectedEntity] = useState<Category | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<ICategory | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<ICategory | null>(null);
 
   // Data is loaded automatically by useBaseList with autoInit: true
   // No need for manual useEffect here
@@ -36,13 +38,13 @@ export const CategoryList = () => {
     setModalOpen(true);
   }, []);
 
-  const handleEdit = useCallback((category: Category) => {
+  const handleEdit = useCallback((category: ICategory) => {
     setSelectedEntity(category);
     setModalMode(CrudMode.EDIT);
     setModalOpen(true);
   }, []);
 
-  const handleDeleteClick = useCallback((category: Category) => {
+  const handleDeleteClick = useCallback((category: ICategory) => {
     setCategoryToDelete(category);
     setDeleteConfirmOpen(true);
   }, []);
@@ -69,6 +71,14 @@ export const CategoryList = () => {
     setSelectedEntity(null);
   }, []);
 
+  const handleSearch = useCallback((params: ISearchParams) => {
+    onSearch(params);
+  }, [onSearch]);
+
+  const handleSearchReset = useCallback(() => {
+    onReset();
+  }, [onReset]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -83,6 +93,32 @@ export const CategoryList = () => {
           New Category
         </Button>
       </div>
+
+      {/* Search Component */}
+      <SearchList
+        paramsSearch={paramsSearch}
+        onSearch={handleSearch}
+        onReset={handleSearchReset}
+        placeholder="Search categories..."
+      >
+        {/* Additional filters can be added here */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Status
+            </label>
+            <select 
+              name="status"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              defaultValue=""
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </SearchList>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200">

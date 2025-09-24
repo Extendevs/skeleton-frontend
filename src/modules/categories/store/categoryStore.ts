@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { IEntityStore } from '../../../core/store/EntityStore';
-import { Category } from '../schema';
+import { ICategory } from '../schema';
 
 /**
  * Category Store - TRUE SINGLETON
@@ -17,7 +17,7 @@ const initialPaginationState = {
     from: null
 };
 
-export const useCategoryStore = create<IEntityStore<Category>>()(
+export const useCategoryStore = create<IEntityStore<ICategory>>()(
     devtools(
         (set, get) => ({
             // Initial state

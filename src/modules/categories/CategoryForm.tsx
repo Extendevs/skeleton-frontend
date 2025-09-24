@@ -13,11 +13,11 @@ import {
   SelectValue,
 } from '../../shared/ui/select';
 import { CrudMode } from '../../core/enums/CrudMode';
-import { Category, categoryFormSchema, CategoryFormValues } from './schema';
+import { ICategory, categoryFormSchema, CategoryFormValues } from './schema';
 
 interface CategoryFormProps {
   mode: CrudMode;
-  category?: Partial<Category>;
+  category?: Partial<ICategory>;
   isSubmitting?: boolean;
   onSubmit: (values: CategoryFormValues) => Promise<void> | void;
   onCancel?: () => void;
@@ -76,7 +76,10 @@ export const CategoryForm = ({
           <Label htmlFor="status">Status</Label>
           <Select
             defaultValue={defaultValues.status}
-            onValueChange={(value) => control.setValue('status', value as 'active' | 'inactive')}
+            onValueChange={(value) => {
+              // @ts-ignore - control has setValue method
+              control.setValue('status', value as 'active' | 'inactive');
+            }}
             disabled={isSubmitting}
           >
             <SelectTrigger id="status">

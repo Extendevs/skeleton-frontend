@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { IEntity } from '../../types/Entity';
 
 export const categoryFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -20,27 +19,12 @@ export const categoryFormSchema = z.object({
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-export interface Category extends IEntity {
+export interface ICategory {
+  id: string;
   name: string;
   description?: string;
   status: 'active' | 'inactive';
   color?: string;
   displayOrder: number;
-  // API fields
-  created_at?: string;
-  updated_at?: string;
-  deleted_at?: string | null;
-  user_created_id?: string;
-  user_updated_id?: string;
-  user_deleted_id?: string | null;
-  user_restored_id?: string | null;
-  position?: number | null;
-  is_searchable?: boolean;
-  is_active?: boolean;
-  parent_id?: string | null;
-  click_action?: string | null;
-  company_id?: string;
-  country_id?: string;
-  title?: string | null;
 }
 

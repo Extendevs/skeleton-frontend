@@ -74,3 +74,10 @@ export const MinusIcon = ({ className = "h-4 w-4" }: { className?: string }) => 
       d="M20 12H4" />
   </svg>
 );
+
+export const XIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);

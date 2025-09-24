@@ -5,7 +5,8 @@ import { ISearchParams } from '../interfaces/list.types';
 export interface UseBaseListConfig<T extends IEntity> {
     store: () => IEntityStore<T>;
     resource: {
-        list: (params: any) => Promise<any>;
+        list?: (params: any) => Promise<any>;
+        search: (params: any) => Promise<any>;
         remove?: (id: string) => Promise<any>;
         restore?: (id: string) => Promise<any>;
     };
@@ -64,7 +65,7 @@ export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
 
         try {
             const params = buildParams();
-            const response = await config.resource.list(params);
+            const response = await config.resource.search(params);
 
             store.setAllEntities(response.data);
 
