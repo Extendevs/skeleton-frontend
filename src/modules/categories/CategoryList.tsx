@@ -25,6 +25,7 @@ export const CategoryList = () => {
   const isLoading = useCategoryStore((state) => state.isLoading);
   const isDeleting = useCategoryStore((state) => state.isDeleting);
 
+
   // Verificar permisos múltiples de una vez
   const permissions = useMultiplePermissions({
     canCreate: 'create.category',
@@ -216,7 +217,7 @@ export const CategoryList = () => {
         </table>
       </div>
 
-      {pagination.pages > 1 && (
+      {entities.length > 0 && (
         <Pagination
           currentPage={pagination.page}
           totalPages={pagination.pages}
@@ -224,8 +225,8 @@ export const CategoryList = () => {
           pageSize={pagination.per_page}
           from={pagination.from}
           to={pagination.to}
-          onPageChange={onPageChanged}
-          onPageSizeChange={() => onPageChanged(1)}
+          onPageChange={(page) => onPageChanged(page)}
+          onPageSizeChange={(size) => onPageChanged(1, size)}
         />
       )}
 

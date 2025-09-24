@@ -33,7 +33,8 @@ export const Pagination = ({
   showPageSize = true,
   maxPagesToShow = 5
 }: PaginationProps) => {
-  if (totalPages <= 1) return null;
+  
+  if (totalItems === 0) return null;
 
   // Calculate page numbers to show
   const getPageNumbers = () => {
@@ -100,53 +101,55 @@ export const Pagination = ({
         )}
 
         {/* Pagination Controls */}
-        <div className="flex items-center gap-1">
-          {/* Previous Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className="h-8 w-8 p-0"
-          >
-            ←
-          </Button>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            {/* Previous Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="h-8 w-8 p-0"
+            >
+              ←
+            </Button>
 
-          {/* Page Numbers */}
-          {getPageNumbers().map((page, idx) => {
-            if (page === '...') {
+            {/* Page Numbers */}
+            {getPageNumbers().map((page, idx) => {
+              if (page === '...') {
+                return (
+                  <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">
+                    ...
+                  </span>
+                );
+              }
+              
+              const pageNum = page as number;
               return (
-                <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">
-                  ...
-                </span>
+                <Button
+                  key={pageNum}
+                  variant={pageNum === currentPage ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onPageChange(pageNum)}
+                  className="h-8 min-w-[32px] px-2"
+                >
+                  {pageNum}
+                </Button>
               );
-            }
-            
-            const pageNum = page as number;
-            return (
-              <Button
-                key={pageNum}
-                variant={pageNum === currentPage ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => onPageChange(pageNum)}
-                className="h-8 min-w-[32px] px-2"
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
+            })}
 
-          {/* Next Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            className="h-8 w-8 p-0"
-          >
-            →
-          </Button>
-        </div>
+            {/* Next Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="h-8 w-8 p-0"
+            >
+              →
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
