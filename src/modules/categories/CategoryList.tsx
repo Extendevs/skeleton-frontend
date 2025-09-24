@@ -17,6 +17,7 @@ import { SearchList } from '../../shared/components/SearchList';
 import { ISearchParams } from '../../core/interfaces/list.types';
 import { useMultiplePermissions } from '../../shared/hooks/usePermissions';
 import { PermissionGuard } from '../../shared/components/PermissionGuard';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../shared/ui';
 
 export const CategoryList = () => {
   const { onPageChanged, onRemove, onSearch, onReset, paramsSearch } = useCategoryList();
@@ -135,64 +136,67 @@ export const CategoryList = () => {
         </div>
       </SearchList>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Name
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Color
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Order
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          {entities.length > 0 && !isLoading && (
-          <tbody className="divide-y divide-slate-100 bg-white">
+      {isLoading ? (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <TableLoading />
+        </div>
+      ) : entities.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <TableEmptyState />
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Color</TableHead>
+              <TableHead>Order</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {entities.map((category) => (
-              <tr key={category.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="text-sm font-medium text-slate-900">{category.name}</div>
+              <TableRow key={category.id}>
+                <TableCell>
+                  <div className="font-medium text-gray-900">
+                    {category.name}
+                  </div>
                   {category.description && (
-                    <div className="text-xs text-slate-500">{category.description}</div>
+                    <div className="text-xs text-gray-500 truncate max-w-xs">
+                      {category.description}
+                    </div>
                   )}
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell>
                   <span
                     className={cn(
-                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
                       category.status === 'active'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-rose-100 text-rose-700'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
                     )}
                   >
                     {category.status}
                   </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-slate-700">
+                </TableCell>
+                <TableCell>
                   {category.color ? (
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="h-4 w-4 rounded-full border border-slate-300"
+                    <div className="flex items-center space-x-1.5">
+                      <div
+                        className="w-3 h-3 border border-gray-300 rounded-sm"
                         style={{ backgroundColor: category.color }}
                       />
-                      <span className="text-xs font-mono">{category.color}</span>
-                    </span>
+                      <span className="font-mono text-xs text-gray-500">{category.color}</span>
+                    </div>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="text-gray-400">—</span>
                   )}
-                </td>
-                <td className="px-4 py-3 text-sm text-slate-700">{category.displayOrder}</td>
-                <td className="px-4 py-3 text-right text-sm">
+                </TableCell>
+                <TableCell>
+                  {category.displayOrder}
+                </TableCell>
+                <TableCell className="text-right">
                   <ListActionButtons
                     disabled={isLoading || isDeleting || isSaving}
                     dropdown={false}
@@ -201,26 +205,12 @@ export const CategoryList = () => {
                     onEdit={() => handleEdit(category)}
                     onRemove={() => handleDeleteClick(category)}
                   />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-          )}
-
-        </table>
-        
-        {isLoading && (
-          <div className="p-4">
-            <TableLoading />
-          </div>
-        )}
-        
-        {!isLoading && entities.length === 0 && (
-          <div className="p-4">
-            <TableEmptyState />
-          </div>
-        )}
-      </div>
+          </TableBody>
+        </Table>
+      )}
 
       {entities.length > 0 && (
         <Pagination

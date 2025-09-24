@@ -44,6 +44,29 @@ export const useSession = () => {
     }
   }, []);
 
+  const validateSession = useCallback(async () => {
+    const currentState = sessionStore.getState();
+
+    // Si no hay token, no hay nada que validar
+    if (!currentState.tokens?.accessToken) {
+      sessionStore.getState().logout();
+      return;
+    }
+
+    try {
+      // Hacer llamada a /me para validar el token
+      const profileResponse = await fetchSessionProfile();
+      sessionStore.getState().setProfile(profileResponse);
+      return profileResponse;
+    } catch (error: any) {
+      // Si es 401 o cualquier error de autenticación, borrar token y redirigir
+      console.warn('Token validation failed:', error?.response?.status || error.message);
+      queryClient.clear();
+      sessionStore.getState().logout();
+      throw error;
+    }
+  }, []);
+
   return {
     profile,
     tokens,
@@ -57,6 +80,7 @@ export const useSession = () => {
     login,
     logout,
     restoreSession,
-    loadProfile
+    loadProfile,
+    validateSession
   };
 };

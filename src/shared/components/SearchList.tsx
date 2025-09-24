@@ -152,7 +152,7 @@ export const SearchList = ({
               
               {/* Search bar */}
               {showSearchBar && (
-                <div className="flex-grow flex gap-2">
+                <div className="flex gap-2">
                   <div className="relative flex-grow">
                     <Input
                       {...register('search')}
@@ -160,7 +160,7 @@ export const SearchList = ({
                       onKeyDown={handleKeyDown}
                       className="pr-10"
                     />
-                    <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                   
                   {searchAction && (
@@ -169,15 +169,14 @@ export const SearchList = ({
                         type="button"
                         variant="outline"
                         onClick={handleReset}
-                        className="px-3 text-red-600 border-red-200 hover:bg-red-50"
+                        className="px-3"
                       >
                         <XIcon className="h-4 w-4" />
                       </Button>
                       
                       <Button
                         type="submit"
-                        variant="outline"
-                        className="px-3 md:px-4 flex items-center gap-2"
+                        className="px-4 flex items-center gap-2"
                       >
                         <SearchIcon className="h-4 w-4" />
                         <span className="hidden md:block">Search</span>

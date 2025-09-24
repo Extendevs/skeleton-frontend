@@ -1,32 +1,36 @@
-import { PropsWithChildren, useEffect } from 'react';
+import { PropsWithChildren, useEffect, useRef } from 'react';
 import { useSession } from '../hooks/useSession';
+import { sessionStore } from '../sessionStore';
 
 export const SessionProvider = ({ children }: PropsWithChildren): JSX.Element => {
-  const { restoreSession, loadProfile, tokens, isRestoring } = useSession();
+  const { restoreSession, validateSession, tokens, isRestoring } = useSession();
+  const hasInitialized = useRef(false);
 
-  // Restaurar sesión al montar
+  // Inicializar sesión al montar
   useEffect(() => {
-    console.log('Restoring session...');
-    restoreSession();
-  }, [restoreSession]);
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
-  // Cargar perfil si hay token disponible
-  useEffect(() => {
-    console.log('Session state:', { isRestoring, hasToken: !!tokens?.accessToken });
-    
-    if (isRestoring) {
-      return; // Esperar a que termine de restaurar
-    }
+    const initializeSession = async () => {
+      // 1. Restaurar tokens del localStorage
+      restoreSession();
+      
+      // 2. Si hay token, validar con /me
+      const currentState = sessionStore.getState();
+      if (currentState.tokens?.accessToken) {
+        try {
+          await validateSession();
+        } catch (error) {
+          console.warn('Token validation failed, redirecting to login');
+          // El hook ya maneja el logout y redirect
+        }
+      }
+    };
 
-    if (tokens?.accessToken) {
-      console.log('Loading profile...');
-      loadProfile().catch(error => {
-        console.error('Failed to load profile:', error);
-      });
-    }
-  }, [isRestoring, tokens?.accessToken, loadProfile]);
+    initializeSession();
+  }, [restoreSession, validateSession]);
 
-  // Solo mostrar loading mientras está restaurando la sesión inicial
+  // Mostrar loading mientras está restaurando/validando
   if (isRestoring) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-600">

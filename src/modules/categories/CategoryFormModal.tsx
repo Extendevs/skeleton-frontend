@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { ICategory } from './schema';
 import { CategoryForm } from './CategoryForm';
 import { Modal } from '../../shared/components/Modal';
@@ -15,6 +14,7 @@ interface CategoryFormModalProps {
 export const CategoryFormModal = ({
   isOpen,
   mode,
+  category,
   onClose,
   onSuccess
 }: CategoryFormModalProps) => {
@@ -36,6 +36,7 @@ export const CategoryFormModal = ({
     >
       <CategoryForm
         mode={mode}
+        category={category || undefined}
         onSuccess={handleSuccess}
         onCancel={onClose}
       />
