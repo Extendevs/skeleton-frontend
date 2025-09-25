@@ -36,7 +36,7 @@ const CategoryListComponent = () => {
     canReport: 'report.category',
     canRestore: 'restore.category'
   });
-  
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<CrudMode>(CrudMode.CREATE);
   const [selectedEntity, setSelectedEntity] = useState<ICategory | null>(null);

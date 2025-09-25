@@ -20,4 +20,3 @@ export {
 
 // Performance hooks
 export * from './useOptimizedCallbacks';
-export * from './usePerformanceMonitor';
