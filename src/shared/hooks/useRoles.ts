@@ -1,89 +1,88 @@
-import { useMemo } from 'react';
-import { useStore } from 'zustand';
-import { sessionStore } from '../../auth/sessionStore';
+import { sessionStore } from '@/shared/auth/sessionStore'
+import { ERoleUserSlug } from '@/shared/interfaces/Entity'
+import { useMemo } from 'react'
+import { useStore } from 'zustand'
 
-// Tipos para roles (ajusta según tu enum)
-export type UserRole = string; // Cambia por tu tipo específico de roles
+const EMPTY_ROLES: ERoleUserSlug[] = []
+
+export type UseRolesHelpers = {
+  roles: ERoleUserSlug[]
+  hasRole: (_role: ERoleUserSlug) => boolean
+  hasAnyRole: (_allowedRoles: ERoleUserSlug[]) => boolean
+  hasAllRoles: (_requiredRoles: ERoleUserSlug[]) => boolean
+  findFirstRole: (_rolesToMatch: ERoleUserSlug[]) => ERoleUserSlug | null
+}
 
 /**
  * Hook para verificar roles (equivalente a AclrPipe)
- * @param key - Rol o array de roles a verificar
- * @param unique - Si es true, retorna el primer rol que coincida
- * @returns boolean | string | null - Resultado de la verificación
+ * Permite usarse de dos maneras:
+ * - `const match = useRoles(['admin'], true);`
+ * - `const { hasAnyRole } = useRoles();`
  */
-export const useRoles = (
-    key: UserRole | UserRole[],
-    unique = false
-): boolean | UserRole | null => {
-    const roles = useStore(sessionStore, (state) => state.profile?.roles || []);
+export function useRoles(): UseRolesHelpers
+export function useRoles(
+  _key: ERoleUserSlug | ERoleUserSlug[],
+  _unique?: boolean
+): boolean | ERoleUserSlug | null
+export function useRoles(
+  key?: ERoleUserSlug | ERoleUserSlug[],
+  unique = false
+): UseRolesHelpers | boolean | ERoleUserSlug | null {
+  const storeRoles = useStore(sessionStore, (state) => state.profile?.roles ?? EMPTY_ROLES)
 
-    return useMemo(() => {
-        if (!roles?.length) {
-            return null;
-        }
+  const helpers = useMemo<UseRolesHelpers>(() => {
+    const roles = Array.isArray(storeRoles) ? storeRoles : []
 
-        if (typeof key === 'string') {
-            return roles.includes(key);
-        }
+    const hasRole = (role: ERoleUserSlug) => roles.includes(role)
 
-        if (Array.isArray(key)) {
-            if (unique) {
-                // Retorna el primer rol que coincida
-                return key.find(role => roles.includes(role)) || null;
-            } else {
-                // Retorna true si tiene al menos uno de los roles
-                const filteredArray = key.filter(role => roles.includes(role));
-                return filteredArray.length > 0;
-            }
-        }
+    const hasAnyRole = (allowedRoles: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(allowedRoles) || !allowedRoles.length) {
+        return false
+      }
+      return allowedRoles.some((role) => roles.includes(role))
+    }
 
-        return false;
-    }, [roles, key, unique]);
-};
+    const hasAllRoles = (requiredRoles: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(requiredRoles) || !requiredRoles.length) {
+        return false
+      }
+      return requiredRoles.every((role) => roles.includes(role))
+    }
 
-/**
- * Hook para verificar si el usuario tiene un rol específico
- * @param role - Rol a verificar
- * @returns boolean
- */
-export const useHasRole = (role: UserRole): boolean => {
-    const roles = useStore(sessionStore, (state) => state.profile?.roles || []);
+    const findFirstRole = (rolesToMatch: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(rolesToMatch) || !rolesToMatch.length) {
+        return null
+      }
+      return rolesToMatch.find((role) => roles.includes(role)) ?? null
+    }
 
-    return useMemo(() => {
-        return roles.includes(role);
-    }, [roles, role]);
-};
+    return {
+      roles,
+      hasRole,
+      hasAnyRole,
+      hasAllRoles,
+      findFirstRole,
+    }
+  }, [storeRoles])
 
-/**
- * Hook para verificar si el usuario tiene alguno de los roles
- * @param rolesList - Array de roles a verificar
- * @returns boolean
- */
-export const useHasAnyRole = (rolesList: UserRole[]): boolean => {
-    const roles = useStore(sessionStore, (state) => state.profile?.roles || []);
+  if (typeof key === 'undefined') {
+    return helpers
+  }
 
-    return useMemo(() => {
-        return rolesList.some(role => roles.includes(role));
-    }, [roles, rolesList]);
-};
+  if (!helpers.roles.length) {
+    return null
+  }
 
-/**
- * Hook para verificar si el usuario tiene todos los roles
- * @param rolesList - Array de roles a verificar
- * @returns boolean
- */
-export const useHasAllRoles = (rolesList: UserRole[]): boolean => {
-    const roles = useStore(sessionStore, (state) => state.profile?.roles || []);
+  if (typeof key === 'string') {
+    return helpers.hasRole(key)
+  }
 
-    return useMemo(() => {
-        return rolesList.every(role => roles.includes(role));
-    }, [roles, rolesList]);
-};
+  if (Array.isArray(key)) {
+    if (unique) {
+      return helpers.findFirstRole(key)
+    }
+    return helpers.hasAnyRole(key)
+  }
 
-/**
- * Hook para obtener los roles del usuario
- * @returns UserRole[] - Array de roles del usuario
- */
-export const useUserRoles = (): UserRole[] => {
-    return useStore(sessionStore, (state) => state.profile?.roles || []);
-};
+  return false
+}

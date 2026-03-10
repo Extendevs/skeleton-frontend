@@ -1,21 +1,37 @@
-import { useState, useCallback, useEffect, useRef, ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { SearchIcon, XIcon } from '../components/icons/Icons';
-import { ISearchParams } from '../../core/interfaces/list.types';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import type { ISearchParams } from '@/shared/interfaces/list.types'
+import { Search, X } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+
+type SearchListSimpleFilter = {
+  operator: string;
+  value: unknown;
+} & Record<string, unknown>;
+
+type SearchListComplexFilter = Record<string, ({ value: unknown } & Record<string, unknown>)>;
+
+type SearchListFilters = Record<string, SearchListSimpleFilter | SearchListComplexFilter>;
 
 interface SearchListProps {
   paramsSearch?: ISearchParams;
-  filters?: Record<string, any>;
+  filters?: SearchListFilters;
   showSearchBar?: boolean;
   searchAction?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  collapsibleFilters?: boolean;
+  defaultFiltersExpanded?: boolean;
+  toggleLabels?: {
+    expand?: string;
+    collapse?: string;
+  };
   children?: ReactNode;
   fieldsetChildren?: ReactNode;
-  onSearch: (params: ISearchParams) => void;
-  onReset: (data: { paramsSearch: ISearchParams; filters: Record<string, any> }) => void;
+  onSearch: (_params: ISearchParams) => void;
+  onReset: (_data: { paramsSearch: ISearchParams; filters: SearchListFilters }) => void;
 }
 
 interface SearchFormData {
@@ -29,15 +45,19 @@ export const SearchList = ({
   searchAction = true,
   disabled = false,
   placeholder = 'Buscar...',
+  collapsibleFilters = false,
+  defaultFiltersExpanded = false,
+  toggleLabels = { expand: 'Ver más filtros', collapse: 'Ver menos filtros' },
   children,
   fieldsetChildren,
   onSearch,
   onReset
 }: SearchListProps) => {
-  const [isSearchable, setIsSearchable] = useState(false);
+  const [, setIsSearchable] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(defaultFiltersExpanded);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { register, handleSubmit, setValue, watch, reset } = useForm<SearchFormData>({
+  const { register, handleSubmit, watch, reset } = useForm<SearchFormData>({
     defaultValues: {
       search: ''
     }
@@ -65,13 +85,10 @@ export const SearchList = ({
   }, [paramsSearch, searchValue, onSearch]);
 
   const handleSearch = useCallback(() => {
-    if (!isSearchable && !searchValue) {
-      return;
-    }
 
     dispatchSearch();
     setIsSearchable(false);
-  }, [isSearchable, searchValue, dispatchSearch]);
+  }, [dispatchSearch]);
 
   const handleReset = useCallback(() => {
     // Reset form
@@ -84,7 +101,7 @@ export const SearchList = ({
     };
 
     // Reset filters - clear all form controls in the form
-    const resetFilters = { ...filters };
+    const resetFilters: SearchListFilters = { ...filters };
     if (formRef.current) {
       const inputs = formRef.current.querySelectorAll('input, select, textarea, [name]');
       inputs.forEach((input) => {
@@ -98,21 +115,26 @@ export const SearchList = ({
           }
           
           // Reset filter value
-          if (resetFilters[name]) {
-            if (!resetFilters[name].operator) {
-              // Complex filter - iterate properties
-              for (const key in resetFilters[name]) {
-                if (Object.prototype.hasOwnProperty.call(resetFilters[name], key)) {
-                  resetFilters[name][key] = {
-                    ...resetFilters[name][key],
-                    value: null
-                  };
-                }
-              }
-            } else {
-              // Simple filter
-              resetFilters[name] = {
-                ...resetFilters[name],
+          const filterDef = resetFilters[name];
+          if (!filterDef) return;
+
+          const operator = (filterDef as Partial<SearchListSimpleFilter>)?.operator;
+          const isSimpleFilter = typeof operator === 'string' && operator.length > 0;
+
+          if (isSimpleFilter) {
+            resetFilters[name] = {
+              ...(filterDef as SearchListSimpleFilter),
+              value: null
+            } as SearchListSimpleFilter;
+            return;
+          }
+
+          // Complex filter - iterate properties
+          const complexFilter = filterDef as SearchListComplexFilter;
+          for (const key in complexFilter) {
+            if (Object.prototype.hasOwnProperty.call(complexFilter, key)) {
+              complexFilter[key] = {
+                ...complexFilter[key],
                 value: null
               };
             }
@@ -122,11 +144,14 @@ export const SearchList = ({
     }
 
     setIsSearchable(false);
+    if (collapsibleFilters) {
+      setFiltersExpanded(defaultFiltersExpanded);
+    }
     onReset({
       paramsSearch: resetParams,
       filters: resetFilters
     });
-  }, [paramsSearch, filters, reset, onReset]);
+  }, [paramsSearch, filters, reset, onReset, collapsibleFilters, defaultFiltersExpanded]);
 
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
@@ -144,52 +169,72 @@ export const SearchList = ({
       className="w-full"
     >
       <fieldset disabled={disabled} className="border-0 p-0 m-0">
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-2">
           <div className="w-full">
-            <div className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-2">
               {/* Content slot - filters, etc. */}
-              {children}
               
               {/* Search bar */}
               {showSearchBar && (
-                <div className="flex gap-2">
-                  <div className="relative flex-grow">
-                    <Input
-                      {...register('search')}
-                      placeholder={placeholder}
-                      onKeyDown={handleKeyDown}
-                      className="pr-10"
-                    />
-                    <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <>
+                  <div className="flex gap-2">
+                    <div className="relative flex-grow">
+                      <Input
+                        {...register('search')}
+                        placeholder={placeholder}
+                        onKeyDown={handleKeyDown}
+                        className="pr-10"
+                      />
+                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
+                    
+                    {searchAction && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleReset}
+                          className="px-3"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          type="submit"
+                          className="px-4 flex items-center gap-2"
+                        >
+                          <Search className="h-4 w-4" />
+                          <span className="hidden md:block">Buscar</span>
+                        </Button>
+                      </>
+                    )}
                   </div>
-                  
-                  {searchAction && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleReset}
-                        className="px-3"
+
+                  {collapsibleFilters && (children || fieldsetChildren) && (
+                    <div className="flex">
+                      <a
+                        onClick={() => setFiltersExpanded((v) => !v)}
+                        aria-expanded={filtersExpanded}
+                        className="underline text-primary cursor-pointer"
                       >
-                        <XIcon className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        type="submit"
-                        className="px-4 flex items-center gap-2"
-                      >
-                        <SearchIcon className="h-4 w-4" />
-                        <span className="hidden md:block">Buscar</span>
-                      </Button>
-                    </>
+                        {filtersExpanded
+                          ? (toggleLabels?.collapse ?? 'Ver menos filtros')
+                          : (toggleLabels?.expand ?? 'Ver más filtros')}
+                      </a>
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
+            
           </div>
-          
-          {/* Fieldset content slot - additional form controls */}
-          {fieldsetChildren}
+          {(!collapsibleFilters || filtersExpanded) && (
+            <>
+              {children}
+              {/* Fieldset content slot - additional form controls */}
+              {fieldsetChildren}
+            </>
+          )}
         </div>
       </fieldset>
     </form>

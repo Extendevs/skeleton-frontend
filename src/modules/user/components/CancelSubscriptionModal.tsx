@@ -1,0 +1,172 @@
+import { Button } from '@/components/ui/button'
+import { Modal } from '@/shared/components/Modal'
+import { AlertTriangle, Heart, Loader2, Shield } from 'lucide-react'
+import { useCallback, useState } from 'react'
+
+type CancelStep = 'persuade' | 'choose' | 'confirm'
+
+interface CancelSubscriptionModalProps {
+  isOpen: boolean
+  isCanceling: boolean
+  onCancel: (_atPeriodEnd: boolean) => void
+  onClose: () => void
+  planName?: string
+}
+
+export function CancelSubscriptionModal({
+  isOpen,
+  isCanceling,
+  onCancel,
+  onClose,
+  planName,
+}: CancelSubscriptionModalProps) {
+  const [step, setStep] = useState<CancelStep>('persuade')
+  const [cancelMode, setCancelMode] = useState<'period_end' | 'immediate' | null>(null)
+
+  const handleClose = useCallback(() => {
+    setStep('persuade')
+    setCancelMode(null)
+    onClose()
+  }, [onClose])
+
+  const handleChooseMode = useCallback((mode: 'period_end' | 'immediate') => {
+    setCancelMode(mode)
+    setStep('confirm')
+  }, [])
+
+  const handleConfirm = useCallback(() => {
+    if (cancelMode === null) return
+    onCancel(cancelMode === 'period_end')
+  }, [cancelMode, onCancel])
+
+  const stepTitles: Record<CancelStep, string> = {
+    persuade: 'Cancelar suscripción',
+    choose: '¿Cómo deseas cancelar?',
+    confirm: 'Confirmar cancelación',
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} title={stepTitles[step]} size="sm">
+      <div className="py-4">
+        {step === 'persuade' && (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <Heart className="h-7 w-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold">¿Seguro que quieres irte?</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Tu plan <strong>{planName}</strong> incluye funciones premium que perderás al
+                cancelar. Nuestro equipo está disponible para ayudarte si algo no funciona como
+                esperas.
+              </p>
+            </div>
+
+            <div className="space-y-3 rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-start gap-3">
+                <Shield className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Conserva tus beneficios</p>
+                  <p className="text-xs text-muted-foreground">
+                    Al cancelar perderás acceso a todas las funciones de tu plan actual.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button onClick={handleClose} className="w-full">
+                Mantener mi plan
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => setStep('choose')}
+              >
+                Continuar con la cancelación
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 'choose' && (
+          <div className="space-y-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Elige cómo deseas cancelar tu suscripción.
+            </p>
+
+            <button
+              type="button"
+              className="w-full rounded-lg border p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+              onClick={() => handleChooseMode('period_end')}
+            >
+              <h4 className="font-medium">Al final del ciclo de facturación</h4>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Mantén acceso completo hasta el final de tu periodo actual. No se realizarán más
+                cobros después.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              className="w-full rounded-lg border border-destructive/20 p-4 text-left transition-colors hover:border-destructive/40 hover:bg-destructive/5"
+              onClick={() => handleChooseMode('immediate')}
+            >
+              <h4 className="font-medium text-destructive">Cancelar inmediatamente</h4>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Se revocará el acceso de inmediato. No se realizarán más cobros.
+              </p>
+            </button>
+
+            <Button variant="ghost" className="w-full" onClick={() => setStep('persuade')}>
+              Volver
+            </Button>
+          </div>
+        )}
+
+        {step === 'confirm' && (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-7 w-7 text-destructive" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {cancelMode === 'immediate'
+                  ? 'Perderás el acceso a tu plan inmediatamente. Esta acción no se puede deshacer.'
+                  : 'Tu plan se mantendrá activo hasta el final del ciclo actual. Después se desactivará automáticamente.'}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="destructive"
+                className="w-full"
+                disabled={isCanceling}
+                onClick={handleConfirm}
+              >
+                {isCanceling ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Cancelando...
+                  </>
+                ) : cancelMode === 'immediate' ? (
+                  'Confirmar cancelación inmediata'
+                ) : (
+                  'Confirmar cancelación al final del ciclo'
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                disabled={isCanceling}
+                onClick={() => setStep('choose')}
+              >
+                Volver
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+}

@@ -1,15 +1,202 @@
-/* Import Lemon UI variables first */
-@import './styles/lemon-ui-vars.css';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Fuente oficial shadcn / Vercel: Geist Sans */
+@import "@fontsource/geist/latin-400.css";
+@import "@fontsource/geist/latin-500.css";
+@import "@fontsource/geist/latin-600.css";
+@import "@fontsource/geist/latin-700.css";
 
-:root {
-  color-scheme: light;
+@custom-variant dark (&:is(.dark *));
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --text-base: 14px;
+    --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+    --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+:root {
+  --radius: 0.5rem;
+  --background: oklch(1.000 0.000 0);
+  --foreground: oklch(0.148 0.004 165.53208295239287);
+  --card: oklch(1.000 0.000 0);
+  --card-foreground: oklch(0.148 0.004 165.53208295239287);
+  --popover: oklch(1.000 0.000 0);
+  --popover-foreground: oklch(0.148 0.004 165.53208295239287);
+  --primary: oklch(0.549 0.097 159.63135618663054);
+  --primary-foreground: oklch(1.000 0.000 0);
+  --secondary: oklch(0.888 0.006 170.44355814020074);
+  --secondary-foreground: oklch(0.232 0.024 167.15740184274037);
+  --muted: oklch(0.888 0.006 170.44355814020074);
+    --muted-foreground: oklch(0.50 0.012 0);
+  --accent: oklch(0.846 0.003 165.061485195223);
+  --accent-foreground: oklch(0.245 0.040 159.51768656922368);
+  --destructive: oklch(0.580 0.237 28.43022926835137);
+  --border: oklch(0.849 0.007 170.36997246667403);
+  --input: oklch(0.849 0.007 170.36997246667403);
+  --ring: oklch(0.549 0.097 159.63135618663054);
+  --chart-1: oklch(0.549 0.097 159.63135618663054);
+  --chart-2: oklch(0.814 0.158 158.56764812939187);
+  --chart-3: oklch(0.838 0.109 161.8117529018972);
+  --chart-4: oklch(0.567 0.140 154.10261494965977);
+  --chart-5: oklch(0.426 0.102 154.8464649104687);
+  --sidebar: oklch(0.888 0.006 170.44355814020074);
+  --sidebar-foreground: oklch(0.232 0.024 167.15740184274037);
+  --sidebar-primary: oklch(0.549 0.097 159.63135618663054);
+  --sidebar-primary-foreground: oklch(1.000 0.000 0);
+  --sidebar-accent: oklch(0.846 0.003 165.061485195223);
+  --sidebar-accent-foreground: oklch(0.245 0.040 159.51768656922368);
+  --sidebar-border: oklch(0.849 0.007 170.36997246667403);
+  --sidebar-ring: oklch(0.549 0.097 159.63135618663054);
+}
+
+.dark {
+  --background: oklch(0.206 0.021 162.87823389021386);
+  --foreground: oklch(0.963 0.003 165.92910884250014);
+  --card: oklch(0.257 0.030 162.3860690068186);
+  --card-foreground: oklch(0.963 0.003 165.92910884250014);
+  --popover: oklch(0.257 0.030 162.3860690068186);
+  --popover-foreground: oklch(0.963 0.003 165.92910884250014);
+  --primary: oklch(0.648 0.141 156.91744339890334);
+  --primary-foreground: oklch(0.963 0.003 165.92910884250014);
+  --secondary: oklch(0.277 0.012 169.30779108265398);
+  --secondary-foreground: oklch(0.967 0.009 170.3539530764611);
+  --muted: oklch(0.277 0.012 169.30779108265398);
+    --muted-foreground: oklch(0.65 0.02 0);
+  --accent: oklch(0.700 0.033 163.86094521522128);
+  --accent-foreground: oklch(0.970 0.016 164.70876026597404);
+  --destructive: oklch(0.580 0.237 28.43022926835137);
+  --border: oklch(0.388 0.027 168.4167185965618);
+  --input: oklch(0.388 0.027 168.4167185965618);
+  --ring: oklch(0.648 0.141 156.91744339890334);
+  --chart-1: oklch(0.648 0.141 156.91744339890334);
+  --chart-2: oklch(0.851 0.158 159.07526861756875);
+  --chart-3: oklch(0.892 0.125 161.36446139520822);
+  --chart-4: oklch(0.588 0.131 156.4050199896148);
+  --chart-5: oklch(0.438 0.083 158.8623429805404);
+  --sidebar: oklch(0.351 0.045 161.86639589540508);
+  --sidebar-foreground: oklch(0.963 0.003 165.92910884250014);
+  --sidebar-primary: oklch(0.648 0.141 156.91744339890334);
+  --sidebar-primary-foreground: oklch(0.963 0.003 165.92910884250014);
+  --sidebar-accent: oklch(0.700 0.033 163.86094521522128);
+  --sidebar-accent-foreground: oklch(0.970 0.016 164.70876026597404);
+  --sidebar-border: oklch(0.387 0.029 163.84630675636143);
+  --sidebar-ring: oklch(0.648 0.141 156.91744339890334);
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Global focus-visible fallback for keyboard users (WCAG 2.4.7). Components with outline-none + ring use their own focus style. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Scroll margin so focused elements aren’t hidden under fixed headers */
+  [id]:focus {
+    scroll-margin-top: 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+table {
+  th.actions {
+    background-color: var(--card);
+  }
+  td.actions, th.actions {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: right;
+    position: sticky;
+    right: 0;
+    width: 1.25rem;
+    background-color: var(--card);
+    animation: shadow-on-scroll linear;
+    animation-timeline: scroll(x);
+    overflow: visible;
+    z-index: 10;
+  }
+}
+
+@keyframes shadow-on-scroll {
+  0% {
+    filter: drop-shadow(rgb(from #21252c r g b / 8%) -2px 10px 6px);
+  }
+  75% {
+    filter: drop-shadow(rgb(from #21252c r g b / 8%) -2px 10px 6px);
+  }
+  99% {
+    filter: none;
+  }
+  /* 0% {
+    filter: none;
+  }
+  1% {
+    filter: drop-shadow(-2px 0 6px rgba(33, 37, 44, 0.08));
+  }
+  100% {
+    filter: drop-shadow(-2px 0 6px rgba(33, 37, 44, 0.08));
+  } */
 }

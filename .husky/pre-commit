@@ -1,0 +1,3 @@
+npx run typecheck
+npx run pretty-quick
+npx run lint-staged

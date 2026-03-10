@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useStore } from 'zustand';
-import { sessionStore } from '../../auth/sessionStore';
+import { sessionStore } from '@/shared/auth/sessionStore';
+
+const EMPTY_ABILITIES: string[] = [];
 
 /**
  * Hook para verificar permisos (equivalente a AclPipe)
@@ -8,7 +10,7 @@ import { sessionStore } from '../../auth/sessionStore';
  * @returns boolean - true si el usuario tiene el permiso
  */
 export const usePermissions = (key: string | string[]): boolean => {
-    const abilities = useStore(sessionStore, (state) => state.profile?.abilities || []);
+    const abilities = useStore(sessionStore, (state) => state.profile?.abilities ?? EMPTY_ABILITIES);
 
     return useMemo(() => {
         if (!abilities?.length) {
@@ -42,7 +44,7 @@ export const usePermissions = (key: string | string[]): boolean => {
 export const useMultiplePermissions = <T extends Record<string, string | string[]>>(
     permissions: T
 ): Record<keyof T, boolean> => {
-    const abilities = useStore(sessionStore, (state) => state.profile?.abilities || []);
+    const abilities = useStore(sessionStore, (state) => state.profile?.abilities ?? EMPTY_ABILITIES);
 
     return useMemo(() => {
         const result: Record<keyof T, boolean> = {} as Record<keyof T, boolean>;

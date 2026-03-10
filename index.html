@@ -1,11 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catalog Console</title>
+
+    <!-- SEO: título y descripción (pestaña, favoritos, compartidos) -->
+    <title>Cumplimiento Laboral | Tu empresa lista para inspecciones y protegida legalmente</title>
+    <meta name="description" content="Expedientes digitales por colaborador, checklist de cumplimiento documental y contratos generados desde plantillas. Gestión de cumplimiento laboral para RH y empresas." />
+
+    <!-- Seguridad: reducir superficie de ataque y fugas de información -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()" />
+
+    <!-- UX / PWA -->
+    <meta name="theme-color" content="#166534" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Fuente: Geist Sans (shadcn/Vercel) vía @fontsource, cargada en CSS -->
   </head>
-  <body class="bg-slate-50 text-slate-900">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

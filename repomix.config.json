@@ -1,0 +1,29 @@
+{
+    "output": {
+        "style": "markdown",
+        "removeComments": true,
+        "removeEmptyLines": true,
+        "topFilesLength": 20,
+        "showLineNumbers": false,
+        "copyToClipboard": false
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "ignore": {
+        "customPatterns": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/*.log",
+            "**/tests/**",
+            "**/*.spec.ts",
+            "**/*.test.ts",
+            "**/types.ts",
+            "**/*.d.ts",
+            "**/assets/**",
+            "**/public/**",
+            ".husky",
+            ".cursor"
+        ]
+    }
+}

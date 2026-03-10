@@ -1,0 +1,4185 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: dist, assets, public, node_modules, .husky, .react-email, out, emails, .cursor, pnpm-lock.yaml, repomix-clean.txt, repomix-output.xml, README.md, assets
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/
+  app/
+    layout/
+      DashboardLayout.tsx
+      useLayoutContext.ts
+    router/
+      PermissionRoute.tsx
+      ProtectedRoute.tsx
+      PublicOnlyRoute.tsx
+      SubscriptionGuard.tsx
+    AccessDeniedPage.tsx
+  assets/
+    react.svg
+  components/
+    ui/
+      alert-dialog.tsx
+    accept-invitation-form.tsx
+    app-sidebar.tsx
+    forgot-password-form.tsx
+    login-form.tsx
+    nav-documents.tsx
+    nav-main.tsx
+    nav-secondary.tsx
+    nav-user.tsx
+    reset-password-form.tsx
+    signup-form.tsx
+    site-header.tsx
+  hooks/
+    use-mobile.ts
+  lib/
+    utils.ts
+  modules/
+    document/
+      components/
+        DocumentTableRow.tsx
+      hooks/
+        useDocumentList.ts
+      services/
+        DocumentResource.ts
+      store/
+        documentStore.ts
+      DocumentForm.tsx
+      DocumentFormModal.tsx
+      DocumentList.tsx
+      DocumentListPage.tsx
+      schema.ts
+    role/
+      components/
+        RolePermissionsEditor.tsx
+        RoleTableRow.tsx
+      hooks/
+        useRoleDetail.ts
+        useRoleList.ts
+        useRolePermissions.ts
+      services/
+        RoleResource.ts
+      store/
+        roleStore.ts
+      RoleDetail.tsx
+      RoleDetailPage.tsx
+      RoleForm.tsx
+      RoleFormModal.tsx
+      RoleList.tsx
+      RoleListPage.tsx
+      schema.ts
+    user/
+      components/
+        CancelSubscriptionModal.tsx
+        UserTableRow.tsx
+      hooks/
+        useSubscription.ts
+        useUserList.ts
+      services/
+        UserResource.ts
+      store/
+        userStore.ts
+      ChangePlanPage.tsx
+      schema.ts
+      SubscriptionPage.tsx
+      UserForm.tsx
+      UserFormModal.tsx
+      UserList.tsx
+      UserListPage.tsx
+  shared/
+    api/
+      apiClient.ts
+      queryClient.ts
+      resourceApi.ts
+    auth/
+      authService.ts
+      Session.ts
+      SessionProvider.tsx
+      sessionStore.ts
+      useSession.ts
+    components/
+      atoms/
+        EmptyStateIcon.tsx
+        ObfuscatedText.tsx
+        PageHeader.tsx
+        ProfileIdentity.tsx
+      molecules/
+        ActionButtonGroup.tsx
+        TableEmptyState.tsx
+        TableLoadingState.tsx
+      ConfirmDialog.tsx
+      DatePicker.tsx
+      Modal.tsx
+      Pagination.tsx
+      PasswordStrength.tsx
+      PermissionGuard.tsx
+      PermissionsModal.tsx
+      SearchList.tsx
+    config/
+      appConfig.ts
+    constants/
+      passwordRequirements.ts
+    enums/
+      CrudMode.ts
+    hooks/
+      useBaseCrud.ts
+      useBaseList.ts
+      useCatalogs.ts
+      useFilteredNavItems.ts
+      useInitOnce.ts
+      usePermissions.ts
+      usePermissionsModal.ts
+      useRoles.ts
+      useToast.ts
+    interfaces/
+      Entity.ts
+      list.types.ts
+    store/
+      EntityStore.ts
+    utils/
+      currencyHelper.ts
+      dateHelper.ts
+      displayInitials.ts
+  App.tsx
+  index.css
+  main.tsx
+.gitignore
+.lintstagedrc.cjs
+.prettierignore
+.prettierrc
+commitlint.config.cjs
+components.json
+crm.code-workspace
+eslint.config.js
+index.html
+package.json
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/app/router/PermissionRoute.tsx">
+  requireAll?: boolean
+}
+
+function isAllowed(
+  hasPermission: boolean,
+  hasRole: boolean,
+  permission?: string | string[],
+  role?: ERoleUserSlug | ERoleUserSlug[],
+  requireAll?: boolean
+): boolean {
+  if (!permission && !role) return true
+  if (permission && !role) return hasPermission
+  if (role && !permission) return hasRole
+  return requireAll ? hasPermission && hasRole : hasPermission || hasRole
+}
+
+/**
+ * Guard de ruta: si el usuario no tiene el permiso o rol indicado, redirige a la página
+ * "Zona protegida" (/acceso-denegado) en lugar de renderizar la ruta.
+ */
+export function PermissionRoute({
+  permission,
+  permissionEntity,
+  role,
+  requireAll = false,
+}: PermissionRouteProps) {
+  const location = useLocation()
+
+  const effectivePermission = useMemo(() => {
+    if (permissionEntity) return entityToPermissions(permissionEntity)
+    return permission
+  }, [permission, permissionEntity])
+
+  const hasPermission = usePermissions(effectivePermission ?? [])
+  const hasRoleResult = useRoles(role ?? [], false)
+  const hasRole = typeof hasRoleResult === 'boolean' ? hasRoleResult : Boolean(hasRoleResult)
+
+  const allowed = isAllowed(hasPermission, hasRole, effectivePermission, role, requireAll)
+  if (!allowed) {
+    return <Navigate to={ACCESS_DENIED_PATH} state={{ from: location }} replace />
+  }
+
+  return <Outlet />
+}
+</file>
+
+<file path="src/app/router/ProtectedRoute.tsx">
+  const navigate = useNavigate()
+  const [tokenValid, setTokenValid] = useState<boolean | null>(() =>
+    !token || !encodedEmail ? false : null
+  )
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+
+  const email = encodedEmail ? decodeURIComponent(encodedEmail) : ''
+  const hasParams = Boolean(token && email)
+
+  const form = useForm<ResetFormData>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { password: '', password_confirmation: '' },
+  })
+
+  useEffect(() => {
+    if (!hasParams) return
+    verifyResetTokenRequest(token!, email)
+      .then((res) => setTokenValid(res.response))
+      .catch(() => setTokenValid(false))
+  }, [token, email, hasParams])
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    if (!token || !email) return
+    try {
+      await resetPasswordRequest({
+        token,
+        email,
+        password: data.password,
+        password_confirmation: data.password_confirmation,
+      })
+      toast.success({
+        title: 'Contraseña actualizada',
+        description: 'Ya puedes iniciar sesión con tu nueva contraseña.',
+      })
+      navigate('/login', { replace: true })
+    } catch {
+      toast.error({
+        title: 'Error',
+        description:
+          'No se pudo restablecer la contraseña. Intenta de nuevo o solicita un nuevo enlace.',
+      })
+    }
+  })
+
+  if (tokenValid === null) {
+    return (
+      <Card className="overflow-hidden p-0">
+        <CardContent className="p-6 md:p-8">
+          <p className="text-center text-muted-foreground">Comprobando enlace…</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!tokenValid) {
+    return (
+      <Card className="overflow-hidden p-0">
+        <CardContent className="p-6 md:p-8">
+          <div className="space-y-4 text-center">
+            <h1 className="text-xl font-bold">Enlace inválido o caducado</h1>
+            <p className="text-muted-foreground">
+              El enlace de restablecimiento no es válido o ha expirado. Solicita uno nuevo.
+            </p>
+            <Button asChild variant="outline">
+              <Link to="/forgot-password">Solicitar nuevo enlace</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="overflow-hidden p-0">
+      <CardContent className="p-6 md:p-8">
+        <ResetPasswordFormFields
+          form={form}
+          onSubmit={onSubmit}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          showPasswordConfirm={showPasswordConfirm}
+          setShowPasswordConfirm={setShowPasswordConfirm}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+</file>
+
+<file path="src/components/site-header.tsx">
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+</file>
+
+<file path="src/modules/document/components/DocumentTableRow.tsx">
+  const groupMap = new Map<string, IRolePermissionModule[]>()
+
+  for (const mod of modules) {
+    const groupName = mod.group || 'Otros'
+    if (!groupMap.has(groupName)) {
+      groupMap.set(groupName, [])
+      groups.push({ name: groupName, modules: groupMap.get(groupName)! })
+    }
+    groupMap.get(groupName)!.push(mod)
+  }
+
+  return groups
+}
+
+export function RolePermissionsEditor({ roleId }: RolePermissionsEditorProps) {
+  const {
+    modules,
+    isLoading,
+    isSaving,
+    hasChanges,
+    error,
+    togglePermission,
+    toggleModule,
+    toggleColumn,
+    selectAll,
+    deselectAll,
+    savePermissions,
+  } = useRolePermissions(roleId)
+
+  const handleSave = useCallback(async () => {
+    try {
+      await savePermissions()
+      toast.success('Permisos actualizados correctamente')
+    } catch {
+      toast.error('Error al guardar los permisos')
+    }
+  }, [savePermissions])
+
+  const groupedModules = useMemo(() => groupModulesByGroup(modules), [modules])
+
+  const columnStates = useMemo(() => {
+    const states: Record<string, { all: boolean; some: boolean }> = {}
+    for (const col of ACTION_COLUMNS) {
+      const perms = modules.flatMap((m) =>
+        m.permissions.filter((p) => p.name.startsWith(`${col.key}.`)),
+      )
+      const activeCount = perms.filter((p) => p.active).length
+      states[col.key] = {
+        all: perms.length > 0 && activeCount === perms.length,
+        some: activeCount > 0 && activeCount < perms.length,
+      }
+    }
+    return states
+  }, [modules])
+
+  const allGlobalActive = useMemo(
+    () => modules.length > 0 && modules.every((m) => m.permissions.every((p) => p.active)),
+    [modules],
+  )
+  const someGlobalActive = useMemo(
+    () => modules.some((m) => m.permissions.some((p) => p.active)) && !allGlobalActive,
+    [modules, allGlobalActive],
+  )
+
+  if (isLoading) {
+    return (
+      <div className="rounded-md border">
+        <div className="flex items-center gap-4 border-b bg-muted/30 px-4 py-3">
+          <Skeleton className="h-4 w-20" />
+          <div className="flex flex-1 justify-around">
+            {Array.from({ length: 6 }).map((_v, j) => (
+              <Skeleton key={j} className="h-4 w-14" />
+            ))}
+          </div>
+        </div>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 border-b border-border/50 px-4 py-3">
+            <Skeleton className="h-4 w-28" />
+            <div className="flex flex-1 justify-around">
+              {Array.from({ length: 6 }).map((_v, j) => (
+                <Skeleton key={j} className="h-4 w-4" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-12">
+        <p className="text-muted-foreground text-sm">{error}</p>
+      </div>
+    )
+  }
+
+  if (modules.length === 0 && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-12">
+        <ShieldCheck className="text-muted-foreground h-10 w-10" />
+        <p className="text-muted-foreground text-sm">No hay permisos disponibles</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div className="overflow-x-auto rounded-md border">
+        <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+          <table className="w-full min-w-[700px]">
+            <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0] shadow-border">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  <div className="flex items-center gap-2.5">
+                    <Checkbox
+                      checked={allGlobalActive ? true : someGlobalActive ? 'indeterminate' : false}
+                      onCheckedChange={() => (allGlobalActive ? deselectAll() : selectAll())}
+                    />
+                    <span>Módulo</span>
+                  </div>
+                </th>
+                {ACTION_COLUMNS.map((col) => (
+                  <th
+                    key={col.key}
+                    className="w-[100px] px-2 py-3 text-center text-sm font-medium text-muted-foreground"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs">{col.label}</span>
+                      <Checkbox
+                        checked={
+                          columnStates[col.key]?.all
+                            ? true
+                            : columnStates[col.key]?.some
+                              ? 'indeterminate'
+                              : false
+                        }
+                        onCheckedChange={() => toggleColumn(col.key)}
+                      />
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {groupedModules.map((group) => (
+                <GroupSection
+                  key={group.name}
+                  groupName={group.name}
+                  modules={group.modules}
+                  onTogglePermission={togglePermission}
+                  onToggleModule={toggleModule}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t bg-background px-4 py-3 lg:-mx-6 lg:px-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={selectAll}>
+              Marcar todas
+            </Button>
+            <Button variant="outline" size="sm" onClick={deselectAll}>
+              Desmarcar todas
+            </Button>
+          </div>
+          <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Guardar 
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GroupSection({
+  groupName,
+  modules,
+  onTogglePermission,
+  onToggleModule,
+}: {
+  groupName: string
+  modules: IRolePermissionModule[]
+  onTogglePermission: (_moduleId: string, _permissionUuid: string) => void
+  onToggleModule: (_moduleId: string) => void
+}) {
+  return (
+    <>
+      <tr>
+        <td
+          colSpan={COLUMN_COUNT}
+          className="bg-muted/40 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          {groupName}
+        </td>
+      </tr>
+      {modules.map((mod, idx) => {
+        const allActive = mod.permissions.length > 0 && mod.permissions.every((p) => p.active)
+        const someActive = mod.permissions.some((p) => p.active) && !allActive
+        const isLast = idx === modules.length - 1
+
+        return (
+          <tr
+            key={mod.id}
+            className={cn(
+              'transition-colors hover:bg-muted/20',
+              !isLast && 'border-b border-border/40',
+            )}
+          >
+            <td className="px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <Checkbox
+                  checked={allActive ? true : someActive ? 'indeterminate' : false}
+                  onCheckedChange={() => onToggleModule(mod.id)}
+                />
+                <span className="text-sm">{mod.name}</span>
+              </div>
+            </td>
+            {ACTION_COLUMNS.map((col) => {
+              const perm = mod.permissions.find((p) => p.name.startsWith(`${col.key}.`))
+
+              if (!perm) {
+                return (
+                  <td key={col.key} className="px-2 py-2.5 text-center">
+                    <span className="text-muted-foreground/20">—</span>
+                  </td>
+                )
+              }
+
+              return (
+                <td key={col.key} className="px-2 py-2.5 text-center">
+                  <Checkbox
+                    checked={perm.active}
+                    onCheckedChange={() => onTogglePermission(mod.id, perm.uuid)}
+                  />
+                </td>
+              )
+            })}
+          </tr>
+        )
+      })}
+    </>
+  )
+}
+</file>
+
+<file path="src/modules/role/components/RoleTableRow.tsx">
+
+      for (const mod of localModules) {
+        payload[mod.id] = {}
+        for (const perm of mod.permissions) {
+          const action = perm.name.split('.')[0]
+          payload[mod.id][action] = { uuid: perm.uuid, active: perm.active }
+        }
+      }
+
+      await RoleResource.setPermissions(roleId, payload)
+      queryClient.invalidateQueries({ queryKey: ['role-permissions', roleId] })
+    } finally {
+      setIsSaving(false)
+    }
+  }, [localModules, roleId, queryClient])
+
+  return {
+    modules: localModules,
+    isLoading,
+    isSaving,
+    hasChanges,
+    error: error ? 'Error al cargar los permisos' : null,
+    togglePermission,
+    toggleModule,
+    toggleColumn,
+    selectAll,
+    deselectAll,
+    savePermissions,
+  }
+}
+</file>
+
+<file path="src/modules/role/services/RoleResource.ts">
+}
+
+export const RoleResource = createCrudApi<IRole, RoleFormValues, Record<string, unknown>, RoleCustomMethods>({
+  basePath: '/role',
+  customMethods: (basePath) => ({
+    getPermissions: async (id: string) => {
+      const { data } = await apiClient.get<{ data: IRolePermissionModule[] }>(`${basePath}/permissions/${id}`)
+      return data.data
+    },
+    setPermissions: async (id: string, permissions) => {
+      const { data } = await apiClient.post<{ data: string[] }>(`${basePath}/permissions/${id}`, { permissions })
+      return data.data
+    },
+  }),
+})
+</file>
+
+<file path="src/modules/role/store/roleStore.ts">
+</file>
+
+<file path="src/modules/user/store/userStore.ts">
+</file>
+
+<file path="src/modules/user/ChangePlanPage.tsx">
+  active: {
+    label: 'Activa',
+    className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  },
+  trialing: {
+    label: 'Periodo de prueba',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  },
+  past_due: {
+    label: 'Pago pendiente',
+    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  },
+  canceled: {
+    label: 'Cancelada',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  },
+  incomplete: {
+    label: 'Incompleta',
+    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  },
+  incomplete_expired: {
+    label: 'Expirada',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  },
+  unpaid: {
+    label: 'Sin pagar',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  },
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+function CurrentPlanSection({
+  plan,
+  subscription,
+  isStripe,
+  onPortal,
+  onChangePlan,
+  onCancelPlan,
+}: {
+  plan: ISubscriptionPlan
+  subscription: {
+    stripe_status: string
+    current_period_start: string | null
+    current_period_end: string | null
+    trial_ends_at: string | null
+    ends_at: string | null
+    cancel_at_period_end: boolean
+  } | null
+  isStripe: boolean
+  onPortal: () => void
+  onChangePlan: () => void
+  onCancelPlan: () => void
+}) {
+  const statusInfo = subscription?.stripe_status
+    ? STATUS_LABELS[subscription.stripe_status]
+    : null
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg">Plan actual</CardTitle>
+            <CardDescription>Detalles de tu suscripción</CardDescription>
+          </div>
+          {statusInfo && (
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.className}`}
+            >
+              {statusInfo.label}
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-2xl font-bold">{plan.name}</h3>
+            {plan.description && (
+              <p className="text-sm text-muted-foreground">{plan.description}</p>
+            )}
+          </div>
+          <div className="text-right">
+            {isStripe ? (
+              <>
+                <p className="text-3xl font-bold tracking-tight">
+                  {formatPrice(plan.price, plan.currency)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  / {plan.interval === 'year' ? 'año' : 'mes'}
+                </p>
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <Check className="h-4 w-4" />
+                Plan gratuito
+              </span>
+            )}
+          </div>
+        </div>
+
+        {isStripe && subscription && (
+          <>
+            {subscription.cancel_at_period_end && (
+              <div className="flex items-start gap-3 rounded-lg border border-yellow-500/30 bg-yellow-50 p-4 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p className="font-semibold">Cancelación programada</p>
+                  <p className="mt-0.5 text-sm">
+                    Tu plan se cancelará el{' '}
+                    {formatDate(subscription.ends_at ?? subscription.current_period_end)}. Mantendrás
+                    acceso hasta esa fecha.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {subscription.current_period_end && (
+                <div className="flex items-start gap-3 rounded-lg border p-4">
+                  <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Próximo cobro</p>
+                    <p className="text-sm font-semibold">
+                      {formatDate(subscription.current_period_end)}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {subscription.trial_ends_at && (
+                <div className="flex items-start gap-3 rounded-lg border p-4">
+                  <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Fin del periodo de prueba
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatDate(subscription.trial_ends_at)}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {subscription.current_period_start && (
+                <div className="flex items-start gap-3 rounded-lg border p-4">
+                  <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Inicio del periodo
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatDate(subscription.current_period_start)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {Array.isArray(plan.features) && plan.features.length > 0 && (
+          <div>
+            <p className="mb-3 text-sm font-medium text-muted-foreground">
+              Características incluidas
+            </p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {plan.features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-3 border-t pt-6">
+          {isStripe && (
+            <>
+              <Button onClick={onChangePlan}>
+                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                Cambiar de plan
+              </Button>
+              <Button variant="outline" onClick={onPortal}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Portal de facturación
+              </Button>
+              {!subscription?.cancel_at_period_end && (
+                <Button
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={onCancelPlan}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancelar suscripción
+                </Button>
+              )}
+            </>
+          )}
+          {!isStripe && (
+            <Button onClick={onChangePlan}>
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              Cambiar de plan
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export function SubscriptionPage() {
+  const isOwner = useRoles(ERoleUserSlug.ACCOUNT_OWNER)
+  const navigate = useNavigate()
+  const { details, isLoading, isCanceling, handleCancel, handlePortal } = useSubscription()
+
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+
+  const handleCancelConfirm = useCallback(
+    async (atPeriodEnd: boolean) => {
+      await handleCancel(atPeriodEnd)
+      setCancelModalOpen(false)
+    },
+    [handleCancel],
+  )
+
+  if (!isOwner) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <Lock className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h2 className="text-xl font-semibold">Acceso restringido</h2>
+        <p className="mt-2 max-w-md text-muted-foreground">
+          Solo el propietario de la cuenta puede gestionar la suscripción. Contacta al
+          administrador de tu organización para realizar cambios.
+        </p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  const plan = details?.plan ?? null
+  const subscription = details?.subscription ?? null
+  const isStripe = plan?.is_stripe ?? false
+
+  if (!plan) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Mi suscripción</h1>
+          <p className="text-muted-foreground">Gestiona tu plan y facturación</p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <CreditCard className="mb-4 h-10 w-10 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">Sin plan activo</h3>
+            <p className="mt-1 mb-6 text-sm text-muted-foreground">
+              Aún no tienes un plan asignado. Selecciona uno para comenzar.
+            </p>
+            <Button onClick={() => navigate('/change-plan')}>Seleccionar un plan</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Mi suscripción</h1>
+        <p className="text-muted-foreground">Gestiona tu plan y facturación</p>
+      </div>
+
+      <CurrentPlanSection
+        plan={plan}
+        subscription={subscription}
+        isStripe={isStripe}
+        onPortal={handlePortal}
+        onChangePlan={() => navigate('/change-plan')}
+        onCancelPlan={() => setCancelModalOpen(true)}
+      />
+
+      <CancelSubscriptionModal
+        isOpen={cancelModalOpen}
+        isCanceling={isCanceling}
+        onCancel={handleCancelConfirm}
+        onClose={() => setCancelModalOpen(false)}
+        planName={plan.name}
+      />
+    </div>
+  )
+}
+</file>
+
+<file path="src/modules/user/UserFormModal.tsx">
+
+export const UserFormModal = ({
+  isOpen,
+  mode,
+  entity,
+  onClose,
+  onSuccess,
+}: IEntityFormModalProps<IUser>) => {
+  const isSaving = useUserStore((s) => s.isSaving);
+
+  const handleSuccess = (result: IUser) => {
+    onSuccess?.(result);
+    onClose();
+  };
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const footerActions = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}
+        disabled={isSaving}
+        className="min-w-[80px]"
+      >
+        Cancelar
+      </Button>
+      <Button type="submit" form={FORM_ID} disabled={isSaving} className="min-w-[100px]">
+        {isSaving
+          ? mode === CrudMode.EDIT
+            ? 'Actualizando...'
+            : 'Creando...'
+          : mode === CrudMode.EDIT
+            ? 'Actualizar'
+            : 'Crear'}
+      </Button>
+    </>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === CrudMode.EDIT ? 'Editar usuario' : 'Nuevo usuario'}
+      size="lg"
+      footer={footerActions}
+    >
+      <UserForm
+        formId={FORM_ID}
+        mode={mode}
+        entity={entity || undefined}
+        onSuccess={handleSuccess}
+      />
+    </Modal>
+  );
+};
+</file>
+
+<file path="src/modules/user/UserListPage.tsx">
+};
+</file>
+
+<file path="src/shared/api/queryClient.ts">
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 30
+    }
+  }
+});
+</file>
+
+<file path="src/shared/components/atoms/EmptyStateIcon.tsx">
+interface EmptyStateIconProps {
+  className?: string;
+}
+
+export const EmptyStateIcon = ({ className = 'h-8 w-8 text-slate-300' }: EmptyStateIconProps) => {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="14" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M7 15h2" />
+    </svg>
+  );
+};
+</file>
+
+<file path="src/shared/components/atoms/ObfuscatedText.tsx">
+  description: string;
+  actions?: ReactNode;
+}
+
+export const PageHeader = ({ 
+  title,
+  description,
+  actions
+}: PageHeaderProps) => (
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      <p className="text-muted-foreground">
+        {description}
+      </p>
+    </div>
+    {actions && (
+      <div className="flex items-center gap-2">
+        {actions}
+      </div>
+    )}
+  </div>
+);
+</file>
+
+<file path="src/shared/components/Modal.tsx">
+
+interface ModalProps {
+  isOpen: boolean;
+  title: ReactNode;
+  description?: ReactNode;
+  onClose: () => void;
+  footer?: ReactNode;
+  size?: ModalSize;
+}
+
+/**
+ * Modal component built on top of Radix UI Dialog
+ * Provides accessible modal dialogs with proper focus management
+ */
+export const Modal = ({ 
+  isOpen, 
+  onClose, 
+  title, 
+  description, 
+  footer, 
+  size = 'md',
+  children 
+}: PropsWithChildren<ModalProps>): JSX.Element => {
+  
+   const getSizeClasses = () => {
+    switch (size) {
+      case 'sm':
+        return 'max-w-md';
+      case 'md':
+        return 'max-w-2xl';
+      case 'lg':
+        return 'max-w-4xl';
+      case 'xl':
+        return 'max-w-6xl';
+      case 'fullscreen':
+        return 'max-w-[95vw] w-[95vw] h-[95vh] max-h-[95vh]';
+      default:
+        return 'max-w-2xl';
+    }
+  };
+
+  return (
+      <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
+          <DialogContent className={`p-0 ${getSizeClasses()}`}>
+            <DialogHeader className="shrink-0 px-6 pt-6">
+              <DialogTitle>{title}</DialogTitle>
+              {description && (
+                <DialogDescription>{description}</DialogDescription>
+              )}
+            </DialogHeader>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6">
+              {children}
+            </div>
+            {footer && (
+              <DialogFooter className="shrink-0 px-6 pb-6">
+                {footer}
+              </DialogFooter>
+            )}
+          </DialogContent>
+      </Dialog>
+  );
+};
+</file>
+
+<file path="src/shared/components/PasswordStrength.tsx">
+  permission?: string | string[];
+  role?: ERoleUserSlug | ERoleUserSlug[];
+  uniqueRole?: boolean;
+  fallback?: ReactNode;
+  requireAll?: boolean; // Si es true, requiere TODOS los permisos/roles
+  isSystemOwner?: boolean;
+}
+
+/**
+ * Componente para proteger contenido basado en permisos y/o roles
+ * Equivalente a usar *ngIf con pipes acl y aclr en Angular
+ */
+export const PermissionGuard = ({
+  children,
+  permission,
+  role,
+  uniqueRole = false,
+  fallback = null,
+  requireAll = false,
+ /*  isSystemOwner = false, */
+}: PermissionGuardProps) => {
+  const hasPermission = usePermissions(permission || []);
+  const hasRole = useRoles(role || [], uniqueRole);
+
+  // Si no se especifica ni permiso ni rol, mostrar contenido
+  if (!permission && !role) {
+    return <>{children}</>;
+  }
+/* 
+  if (isSystemOwner && hasPermission && hasRole) {
+    return <>{children}</>;
+  } */
+
+
+  // Solo verificar permisos
+  if (permission && !role) {
+    return hasPermission ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Solo verificar roles
+  if (role && !permission) {
+    const roleResult = typeof hasRole === 'boolean' ? hasRole : !!hasRole;
+    return roleResult ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Verificar ambos: permisos Y roles
+  if (permission && role) {
+    const roleResult = typeof hasRole === 'boolean' ? hasRole : !!hasRole;
+    
+    if (requireAll) {
+      // Requiere AMBOS: permiso Y rol
+      return (hasPermission && roleResult) ? <>{children}</> : <>{fallback}</>;
+    } else {
+      // Requiere AL MENOS UNO: permiso O rol
+      return (hasPermission || roleResult) ? <>{children}</> : <>{fallback}</>;
+    }
+  }
+
+  return <>{fallback}</>;
+};
+</file>
+
+<file path="src/shared/components/PermissionsModal.tsx">
+  value: unknown;
+} & Record<string, unknown>;
+
+type SearchListComplexFilter = Record<string, ({ value: unknown } & Record<string, unknown>)>;
+
+type SearchListFilters = Record<string, SearchListSimpleFilter | SearchListComplexFilter>;
+
+interface SearchListProps {
+  paramsSearch?: ISearchParams;
+  filters?: SearchListFilters;
+  showSearchBar?: boolean;
+  searchAction?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+  collapsibleFilters?: boolean;
+  defaultFiltersExpanded?: boolean;
+  toggleLabels?: {
+    expand?: string;
+    collapse?: string;
+  };
+  children?: ReactNode;
+  fieldsetChildren?: ReactNode;
+  onSearch: (_params: ISearchParams) => void;
+  onReset: (_data: { paramsSearch: ISearchParams; filters: SearchListFilters }) => void;
+}
+
+interface SearchFormData {
+  search: string;
+}
+
+export const SearchList = ({
+  paramsSearch = {},
+  filters = {},
+  showSearchBar = true,
+  searchAction = true,
+  disabled = false,
+  placeholder = 'Buscar...',
+  collapsibleFilters = false,
+  defaultFiltersExpanded = false,
+  toggleLabels = { expand: 'Ver más filtros', collapse: 'Ver menos filtros' },
+  children,
+  fieldsetChildren,
+  onSearch,
+  onReset
+}: SearchListProps) => {
+  const [, setIsSearchable] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(defaultFiltersExpanded);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const { register, handleSubmit, watch, reset } = useForm<SearchFormData>({
+    defaultValues: {
+      search: ''
+    }
+  });
+
+  const searchValue = watch('search');
+
+  // Watch for changes in search input
+  useEffect(() => {
+    if (searchValue !== '') {
+      setIsSearchable(true);
+    }
+  }, [searchValue]);
+
+  const dispatchSearch = useCallback(() => {
+    const searchParams: ISearchParams = {
+      ...paramsSearch,
+      search: searchValue ? {
+        value: searchValue,
+        case_sensitive: false
+      } : null
+    };
+
+    onSearch(searchParams);
+  }, [paramsSearch, searchValue, onSearch]);
+
+  const handleSearch = useCallback(() => {
+
+    dispatchSearch();
+    setIsSearchable(false);
+  }, [dispatchSearch]);
+
+  const handleReset = useCallback(() => {
+    // Reset form
+    reset({ search: '' });
+    
+    // Reset search params
+    const resetParams: ISearchParams = {
+      ...paramsSearch,
+      search: null
+    };
+
+    // Reset filters - clear all form controls in the form
+    const resetFilters: SearchListFilters = { ...filters };
+    if (formRef.current) {
+      const inputs = formRef.current.querySelectorAll('input, select, textarea, [name]');
+      inputs.forEach((input) => {
+        const element = input as HTMLInputElement;
+        const name = element.getAttribute('name');
+        
+        if (name && name !== 'search') {
+          // Remove filter from search params
+          if (resetParams.filters) {
+            resetParams.filters = resetParams.filters.filter(item => item.field !== name);
+          }
+          
+          // Reset filter value
+          const filterDef = resetFilters[name];
+          if (!filterDef) return;
+
+          const operator = (filterDef as Partial<SearchListSimpleFilter>)?.operator;
+          const isSimpleFilter = typeof operator === 'string' && operator.length > 0;
+
+          if (isSimpleFilter) {
+            resetFilters[name] = {
+              ...(filterDef as SearchListSimpleFilter),
+              value: null
+            } as SearchListSimpleFilter;
+            return;
+          }
+
+          // Complex filter - iterate properties
+          const complexFilter = filterDef as SearchListComplexFilter;
+          for (const key in complexFilter) {
+            if (Object.prototype.hasOwnProperty.call(complexFilter, key)) {
+              complexFilter[key] = {
+                ...complexFilter[key],
+                value: null
+              };
+            }
+          }
+        }
+      });
+    }
+
+    setIsSearchable(false);
+    if (collapsibleFilters) {
+      setFiltersExpanded(defaultFiltersExpanded);
+    }
+    onReset({
+      paramsSearch: resetParams,
+      filters: resetFilters
+    });
+  }, [paramsSearch, filters, reset, onReset, collapsibleFilters, defaultFiltersExpanded]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSearch();
+    }
+  }, [handleSearch]);
+
+  return (
+    <form 
+      ref={formRef}
+      onSubmit={handleSubmit(handleSearch)}
+      autoComplete="off" 
+      id="searchForm" 
+      className="w-full"
+    >
+      <fieldset disabled={disabled} className="border-0 p-0 m-0">
+        <div className="flex flex-col gap-2">
+          <div className="w-full">
+            <div className="flex flex-col gap-2">
+              {/* Content slot - filters, etc. */}
+              
+              {/* Search bar */}
+              {showSearchBar && (
+                <>
+                  <div className="flex gap-2">
+                    <div className="relative flex-grow">
+                      <Input
+                        {...register('search')}
+                        placeholder={placeholder}
+                        onKeyDown={handleKeyDown}
+                        className="pr-10"
+                      />
+                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
+                    
+                    {searchAction && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleReset}
+                          className="px-3"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          type="submit"
+                          className="px-4 flex items-center gap-2"
+                        >
+                          <Search className="h-4 w-4" />
+                          <span className="hidden md:block">Buscar</span>
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  {collapsibleFilters && (children || fieldsetChildren) && (
+                    <div className="flex">
+                      <a
+                        onClick={() => setFiltersExpanded((v) => !v)}
+                        aria-expanded={filtersExpanded}
+                        className="underline text-primary cursor-pointer"
+                      >
+                        {filtersExpanded
+                          ? (toggleLabels?.collapse ?? 'Ver menos filtros')
+                          : (toggleLabels?.expand ?? 'Ver más filtros')}
+                      </a>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            
+          </div>
+          {(!collapsibleFilters || filtersExpanded) && (
+            <>
+              {children}
+              {/* Fieldset content slot - additional form controls */}
+              {fieldsetChildren}
+            </>
+          )}
+        </div>
+      </fieldset>
+    </form>
+  );
+};
+</file>
+
+<file path="src/shared/constants/passwordRequirements.ts">
+export const PASSWORD_MIN_LENGTH = 8
+
+export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
+
+export const PASSWORD_REQUIREMENTS_TEXT =
+  'Mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número.'
+
+export const PASSWORD_REQUIREMENTS_SHORT = 'Mín. 8 caracteres, mayúscula, minúscula y número.'
+</file>
+
+<file path="src/shared/hooks/useBaseList.ts">
+    sort?: Array<{ field: string; direction: string }>
+    includes?: Array<{ relation: string }>
+    [key: string]: unknown
+}
+
+export interface UseBaseListConfig<T extends IEntity> {
+    store: () => IEntityStore<T>
+    resource: ResourceApi<T>
+    autoInit?: boolean
+    overrideParams?: OverrideParams
+    initialSearch?: ISearchParams
+    view?: string
+}
+
+/**
+ * Base List Hook — composition-based CRUD list logic.
+ * Store actions are accessed via refs to keep callbacks stable
+ * and avoid cascading re-creations on every store state change.
+ */
+export function useBaseList<T extends IEntity>(config: UseBaseListConfig<T>) {
+    const store = config.store()
+
+    // Ref keeps the latest store snapshot so callbacks don't need
+    // `store` in their dependency arrays (which changes every render).
+    const storeRef = useRef(store)
+    storeRef.current = store
+
+    const [paramsSearch, setParamsSearch] = useState<ISearchParams>(
+        config.initialSearch || {
+            search: null,
+            filters: [],
+            sort: [],
+            includes: [],
+            aggregates: [],
+            user_id: null,
+        }
+    )
+    const paramsSearchRef = useRef(paramsSearch)
+    paramsSearchRef.current = paramsSearch
+
+    const buildParams = useCallback((overrides?: { page?: number; limit?: number }, searchOverrides?: Partial<ISearchParams>) => {
+        const currentStore = storeRef.current
+        const currentSearch = searchOverrides
+            ? { ...paramsSearchRef.current, ...searchOverrides }
+            : paramsSearchRef.current
+
+        // page/limit: overrides > currentSearch (initialSearch) > store.pagination
+        const pagination = {
+            ...currentStore.pagination,
+            ...(currentSearch.page !== undefined && { page: currentSearch.page }),
+            ...(currentSearch.limit !== undefined && { limit: currentSearch.limit }),
+            ...overrides,
+        }
+        const { page, limit } = pagination
+
+        const params: Record<string, unknown> = {
+            page,
+            limit,
+            view: config.view
+        }
+
+        if (config.overrideParams) {
+            const { filters: overrideFilters, sort: overrideSort, includes: overrideIncludes, ...otherOverrides } = config.overrideParams
+
+            Object.assign(params, otherOverrides)
+
+            if (overrideFilters?.length || currentSearch.filters?.length) {
+                params.filters = [
+                    ...(currentSearch.filters || []),
+                    ...(overrideFilters || [])
+                ]
+            }
+
+            if (overrideSort?.length) {
+                params.sort = overrideSort
+            } else if (currentSearch.sort?.length) {
+                params.sort = currentSearch.sort
+            }
+
+            if (overrideIncludes?.length || currentSearch.includes?.length) {
+                const allIncludes = [
+                    ...(currentSearch.includes || []),
+                    ...(overrideIncludes || [])
+                ]
+                const uniqueIncludes = allIncludes.filter((include, index, self) =>
+                    index === self.findIndex(i => i.relation === include.relation)
+                )
+                params.includes = uniqueIncludes
+            }
+        } else {
+            if (currentSearch.filters?.length) {
+                params.filters = currentSearch.filters
+            }
+            if (currentSearch.sort?.length) {
+                params.sort = currentSearch.sort
+            }
+            if (currentSearch.includes?.length) {
+                params.includes = currentSearch.includes
+            }
+        }
+
+        if (currentSearch.search?.value) {
+            params.search = {
+                value: currentSearch.search.value.trim(),
+                case_sensitive: false
+            }
+        }
+
+        if (currentSearch.aggregates?.length) {
+            params.aggregates = currentSearch.aggregates
+        }
+
+        if (currentSearch.user_id) {
+            params.user_id = currentSearch.user_id
+        }
+
+        if (currentSearch.scopes?.length) {
+            params.scopes = currentSearch.scopes
+        }
+
+        if (currentSearch.active !== undefined) {
+            params.active = currentSearch.active
+        }
+
+        return params
+    }, [config.overrideParams, config.view])
+
+    const getList = useCallback(async (paramOverrides?: { page?: number; limit?: number }, searchOverrides?: Partial<ISearchParams>) => {
+        const s = storeRef.current
+        s.putLoading(true)
+        s.putNotFound(false)
+
+        try {
+            const params = buildParams(paramOverrides, searchOverrides)
+            const response = await config.resource.search(params)
+
+            s.setAllEntities(response.data)
+
+            let paginationUpdate
+
+            if (response.meta && typeof response.meta === 'object') {
+                const meta = response.meta
+                paginationUpdate = {
+                    page: meta.current_page || (params.page as number) || 1,
+                    limit: meta.per_page || (params.limit as number) || 20,
+                    total: meta.total || (response.total as number) || response.data.length,
+                    pages: meta.last_page || Math.ceil((meta.total || (response.total as number) || response.data.length) / (meta.per_page || (params.limit as number) || 20)),
+                    per_page: meta.per_page || (params.limit as number) || 20,
+                    from: meta.from || (((params.page as number) || 1) - 1) * ((params.limit as number) || 20) + 1,
+                    to: meta.to || Math.min(((params.page as number) || 1) * ((params.limit as number) || 20), meta.total || (response.total as number) || response.data.length)
+                }
+                s.putMeta(response.meta)
+            } else {
+                const currentPage = (params.page as number) || 1
+                const pageSize = (params.limit as number) || 20
+                const totalItems = (response.total as number) || response.data.length
+
+                let totalPages
+                if (totalItems && totalItems > 0) {
+                    totalPages = Math.ceil(totalItems / pageSize)
+                } else if (response.data.length === pageSize) {
+                    totalPages = currentPage + 1
+                } else {
+                    totalPages = currentPage
+                }
+
+                paginationUpdate = {
+                    page: currentPage,
+                    limit: pageSize,
+                    total: totalItems || response.data.length,
+                    pages: totalPages,
+                    per_page: pageSize,
+                    from: response.data.length > 0 ? (currentPage - 1) * pageSize + 1 : null,
+                    to: response.data.length > 0 ? (currentPage - 1) * pageSize + response.data.length : null
+                }
+            }
+
+            s.putPagination(paginationUpdate)
+            s.putNotFound(response.data.length === 0)
+
+            return response
+        } catch (error) {
+            s.removeAllEntities()
+            s.putMeta(null)
+            toast.error('Error al obtener la lista')
+            throw error
+        } finally {
+            s.putLoading(false)
+        }
+    }, [buildParams, config.resource])
+
+    const onSearch = useCallback((search?: Partial<ISearchParams>) => {
+        if (search) {
+            setParamsSearch(prev => ({ ...prev, ...search }))
+        }
+        storeRef.current.putPagination({ page: 1 })
+        return getList({ page: 1 }, search)
+    }, [getList])
+
+    const onReset = useCallback(() => {
+        const resetSearch: ISearchParams = {
+            search: null,
+            filters: [],
+            sort: paramsSearchRef.current.sort,
+            includes: paramsSearchRef.current.includes,
+            aggregates: [],
+            user_id: null,
+        }
+        setParamsSearch(resetSearch)
+        storeRef.current.putPagination({ page: 1 })
+        return getList({ page: 1 }, resetSearch)
+    }, [getList])
+
+    const onPageChanged = useCallback((page: number, limit?: number) => {
+        const paginationUpdate = {
+            page,
+            ...(limit ? { limit } : {})
+        }
+        storeRef.current.putPagination(paginationUpdate)
+        return getList(paginationUpdate)
+    }, [getList])
+
+    const onRemove = useCallback(async (entity: T) => {
+        if (!config.resource.remove) return
+
+        const s = storeRef.current
+        s.putDeleting(true)
+        try {
+            await config.resource.remove(entity.id.toString())
+            s.removeEntity(entity.id)
+            toast.success('Registro eliminado exitosamente')
+        } catch (error) {
+            toast.error('Error al eliminar el registro')
+            throw error
+        } finally {
+            s.putDeleting(false)
+        }
+    }, [config.resource])
+
+    const onRestore = useCallback(async (entity: T) => {
+        if (!config.resource.restore) return
+
+        const s = storeRef.current
+        s.putSaving(true)
+        try {
+            await config.resource.restore(entity.id.toString())
+            toast.success('Registro restaurado exitosamente')
+            await getList()
+        } catch (error) {
+            toast.error('Error al restaurar el registro')
+            throw error
+        } finally {
+            s.putSaving(false)
+        }
+    }, [config.resource, getList])
+
+    const onReport = useCallback(async (
+        model: string,
+        type: 'xlsx' | 'csv' | 'pdf' = 'xlsx',
+        title: string = 'reporte',
+        reportType?: string
+    ) => {
+        if (!config.resource.report) {
+            toast.error('La descarga de reportes no está disponible')
+            return
+        }
+
+        const s = storeRef.current
+        s.putLoading(true)
+
+        try {
+            const params = buildParams()
+            const reportParams: ReportParams = {
+                _model: model,
+                _type: type,
+                _title: title,
+                _report_type: reportType,
+                limit: params.limit as number,
+                page: params.page as number,
+                ...params,
+            }
+
+            const blob = await config.resource.report(reportParams)
+
+            if (blob.size <= 0) {
+                toast.info('No hay datos para exportar')
+                return
+            }
+
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `${title}.${type}`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(url)
+
+            toast.success('Reporte descargado correctamente')
+        } catch (error) {
+            toast.error('Error al descargar el reporte, inténtalo más tarde')
+            throw error
+        } finally {
+            s.putLoading(false)
+        }
+    }, [buildParams, config.resource])
+
+    useInitOnce(() => {
+        if (config.autoInit !== false) {
+            getList()
+        }
+    }, 'baseList')
+
+    return {
+        store,
+        paramsSearch,
+        setParamsSearch,
+
+        getList,
+        onSearch,
+        onReset,
+        onPageChanged,
+        onRemove,
+        onRestore,
+        onReport,
+    }
+}
+</file>
+
+<file path="src/shared/hooks/useFilteredNavItems.ts">
+
+export interface NavSubItem {
+  title: string;
+  url: string;
+  permissionEntity?: string;
+  roles?: ERoleUserSlug[];
+}
+
+export interface NavItem {
+  title: string;
+  url: string;
+  icon?: React.ComponentType;
+  isActive?: boolean;
+  permissionEntity?: string;
+  roles?: ERoleUserSlug[];
+  items?: NavSubItem[];
+}
+
+const EMPTY_ABILITIES: string[] = [];
+const EMPTY_ROLES: ERoleUserSlug[] = [];
+
+function hasEntityAccess(abilities: string[], entity: string): boolean {
+  return abilities.includes(`read.${entity}`) || abilities.includes(`report.${entity}`);
+}
+
+function hasRoleAccess(userRoles: ERoleUserSlug[], requiredRoles: ERoleUserSlug[]): boolean {
+  return requiredRoles.some((role) => userRoles.includes(role));
+}
+
+function isItemVisible(
+  item: Pick<NavItem, 'permissionEntity' | 'roles'>,
+  abilities: string[],
+  userRoles: ERoleUserSlug[],
+): boolean {
+  if (item.roles?.length && !hasRoleAccess(userRoles, item.roles)) return false;
+  if (item.permissionEntity && !hasEntityAccess(abilities, item.permissionEntity)) return false;
+
+  return true;
+}
+
+export function useFilteredNavItems(items: NavItem[]): NavItem[] {
+  const abilities = useStore(sessionStore, (state) => state.profile?.abilities ?? EMPTY_ABILITIES);
+  const userRoles = useStore(sessionStore, (state) => state.profile?.roles ?? EMPTY_ROLES);
+
+  return useMemo(() => {
+    return items.reduce<NavItem[]>((acc, item) => {
+      if (item.items?.length) {
+        const filteredChildren = item.items.filter((child) =>
+          isItemVisible(child, abilities, userRoles),
+        );
+
+        if (filteredChildren.length > 0) {
+          acc.push({ ...item, items: filteredChildren });
+        }
+
+        return acc;
+      }
+
+      if (isItemVisible(item, abilities, userRoles)) {
+        acc.push(item);
+      }
+
+      return acc;
+    }, []);
+  }, [items, abilities, userRoles]);
+}
+</file>
+
+<file path="src/shared/hooks/usePermissions.ts">
+
+const EMPTY_ABILITIES: string[] = [];
+
+/**
+ * Hook para verificar permisos (equivalente a AclPipe)
+ * @param key - Permiso o array de permisos a verificar
+ * @returns boolean - true si el usuario tiene el permiso
+ */
+export const usePermissions = (key: string | string[]): boolean => {
+    const abilities = useStore(sessionStore, (state) => state.profile?.abilities ?? EMPTY_ABILITIES);
+
+    return useMemo(() => {
+        if (!abilities?.length) {
+            return false;
+        }
+
+        if (typeof key === 'string') {
+            return abilities.includes(key);
+        }
+
+        if (Array.isArray(key)) {
+            return key.some(k => abilities.includes(k));
+        }
+
+        return false;
+    }, [abilities, key]);
+};
+
+/**
+ * Hook para verificar múltiples permisos individualmente
+ * @param permissions - Object con permisos a verificar
+ * @returns Object con el resultado de cada permiso
+ * 
+ * @example
+ * const { canCreate, canEdit, canDelete } = useMultiplePermissions({
+ *   canCreate: 'create.bonus',
+ *   canEdit: 'edit.bonus', 
+ *   canDelete: 'delete.bonus'
+ * });
+ */
+export const useMultiplePermissions = <T extends Record<string, string | string[]>>(
+    permissions: T
+): Record<keyof T, boolean> => {
+    const abilities = useStore(sessionStore, (state) => state.profile?.abilities ?? EMPTY_ABILITIES);
+
+    return useMemo(() => {
+        const result: Record<keyof T, boolean> = {} as Record<keyof T, boolean>;
+
+        Object.entries(permissions).forEach(([key, permission]) => {
+            if (!abilities?.length) {
+                result[key as keyof T] = false;
+                return;
+            }
+
+            if (typeof permission === 'string') {
+                result[key as keyof T] = abilities.includes(permission);
+            } else if (Array.isArray(permission)) {
+                result[key as keyof T] = permission.some(p => abilities.includes(p));
+            } else {
+                result[key as keyof T] = false;
+            }
+        });
+
+        return result;
+    }, [abilities, permissions]);
+};
+</file>
+
+<file path="src/shared/hooks/usePermissionsModal.ts">
+
+interface PermissionsModalState {
+    isOpen: boolean;
+    message: string;
+    action: string;
+    openModal: (message?: string, action?: string) => void;
+    closeModal: () => void;
+}
+
+/**
+ * Hook para manejar el modal de permisos insuficientes (403)
+ * Utiliza Zustand para estado global simple
+ */
+export const usePermissionsModal = create<PermissionsModalState>((set) => ({
+    isOpen: false,
+    message: 'No tienes permisos para realizar esta acción',
+    action: 'acción solicitada',
+
+    openModal: (message = 'No tienes permisos para realizar esta acción', action = 'acción solicitada') =>
+        set({
+            isOpen: true,
+            message,
+            action
+        }),
+
+    closeModal: () =>
+        set({
+            isOpen: false,
+            message: 'No tienes permisos para realizar esta acción',
+            action: 'acción solicitada'
+        }),
+}));
+</file>
+
+<file path="src/shared/hooks/useRoles.ts">
+ * - `const { hasAnyRole } = useRoles();`
+ */
+export function useRoles(): UseRolesHelpers
+export function useRoles(
+  _key: ERoleUserSlug | ERoleUserSlug[],
+  _unique?: boolean
+): boolean | ERoleUserSlug | null
+export function useRoles(
+  key?: ERoleUserSlug | ERoleUserSlug[],
+  unique = false
+): UseRolesHelpers | boolean | ERoleUserSlug | null {
+  const storeRoles = useStore(sessionStore, (state) => state.profile?.roles ?? EMPTY_ROLES)
+
+  const helpers = useMemo<UseRolesHelpers>(() => {
+    const roles = Array.isArray(storeRoles) ? storeRoles : []
+
+    const hasRole = (role: ERoleUserSlug) => roles.includes(role)
+
+    const hasAnyRole = (allowedRoles: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(allowedRoles) || !allowedRoles.length) {
+        return false
+      }
+      return allowedRoles.some((role) => roles.includes(role))
+    }
+
+    const hasAllRoles = (requiredRoles: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(requiredRoles) || !requiredRoles.length) {
+        return false
+      }
+      return requiredRoles.every((role) => roles.includes(role))
+    }
+
+    const findFirstRole = (rolesToMatch: ERoleUserSlug[]) => {
+      if (!roles.length || !Array.isArray(rolesToMatch) || !rolesToMatch.length) {
+        return null
+      }
+      return rolesToMatch.find((role) => roles.includes(role)) ?? null
+    }
+
+    return {
+      roles,
+      hasRole,
+      hasAnyRole,
+      hasAllRoles,
+      findFirstRole,
+    }
+  }, [storeRoles])
+
+  if (typeof key === 'undefined') {
+    return helpers
+  }
+
+  if (!helpers.roles.length) {
+    return null
+  }
+
+  if (typeof key === 'string') {
+    return helpers.hasRole(key)
+  }
+
+  if (Array.isArray(key)) {
+    if (unique) {
+      return helpers.findFirstRole(key)
+    }
+    return helpers.hasAnyRole(key)
+  }
+
+  return false
+}
+</file>
+
+<file path="src/shared/hooks/useToast.ts">
+</file>
+
+<file path=".prettierignore">
+node_modules
+dist
+build
+.git
+*.min.js
+*.min.css
+bun.lockb
+package-lock.json
+</file>
+
+<file path=".prettierrc">
+{
+  "semi": false,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "jsxSingleQuote": true,
+  "plugins": [],
+  "overrides": [
+    {
+      "files": ["*.json", "*.md"],
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
+}
+</file>
+
+<file path="commitlint.config.cjs">
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+};
+</file>
+
+<file path="components.json">
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {}
+}
+</file>
+
+<file path="crm.code-workspace">
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "../backend"
+    }
+  ],
+  "settings": {
+    "php.version": "8.4"
+  }
+}
+</file>
+
+<file path="src/app/layout/DashboardLayout.tsx">
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarMenu>
+        {items.map((item) => (
+          <Collapsible
+            key={item.title}
+            asChild
+            defaultOpen={item.isActive}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton className='cursor-pointer' tooltip={item.title} onClick={() => navigate(item.url)}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                  {item.items && (
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  )}
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              {item.items && (
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.items?.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton asChild>
+                        <a className='cursor-pointer' onClick={() => navigate(subItem.url)}>
+                          <span>{subItem.title}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+              )}
+            </SidebarMenuItem>
+          </Collapsible>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  )
+}
+</file>
+
+<file path="src/components/nav-secondary.tsx">
+'use client'
+
+      <FieldGroup>
+        <FieldSet>
+          <FieldLegend>Información del documento</FieldLegend>
+          <FieldDescription>Datos principales del documento</FieldDescription>
+          <FieldGroup>
+            <div className="grid grid-cols-12 gap-4">
+            <Field className="col-span-12">
+              <FieldLabel htmlFor="document-name" required>
+                Nombre
+              </FieldLabel>
+              <Input
+                id="document-name"
+                placeholder="Nombre del documento"
+                {...register('name')}
+                disabled={isSaving}
+              />
+              <FieldError>{errors.name?.message}</FieldError>
+            </Field>
+            <Field className="col-span-12 md:col-span-4">
+              <FieldLabel htmlFor="document-required">Requerido</FieldLabel>
+              <Controller
+                name="required"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="document-required"
+                    checked={field.value ?? false}
+                    onCheckedChange={field.onChange}
+                    disabled={isSaving}
+                  />
+                )}
+              />
+            </Field>
+            <Field className="col-span-12 md:col-span-4">
+              <FieldLabel htmlFor="document-vigency">Vigencia</FieldLabel>
+              <Controller
+                name="vigency"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="document-vigency"
+                    checked={field.value ?? false}
+                    onCheckedChange={field.onChange}
+                    disabled={isSaving}
+                  />
+                )}
+              />
+            </Field>
+
+            <Field className="col-span-12 md:col-span-4">
+              <FieldLabel htmlFor="document-type">
+                Tipo de documento
+              </FieldLabel>
+              <Controller
+                name="type_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
+                    disabled={isSaving}
+                  >
+                    <SelectTrigger id="document-type" className="w-full">
+                      <SelectValue placeholder="Seleccionar tipo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalogs[CatalogType.DOCUMENT_TYPE]?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError>{errors.type_id?.message}</FieldError>
+            </Field>
+
+            <Field className="col-span-12">
+              <FieldLabel htmlFor="document-description">Descripción</FieldLabel>
+              <Textarea
+                id="document-description"
+                placeholder="Descripción del documento..."
+                className="resize-none"
+                rows={4}
+                {...register('description')}
+                disabled={isSaving}
+              />
+              <FieldDescription>Detalle brevemente el propósito del documento</FieldDescription>
+            </Field>
+            </div>
+          </FieldGroup>
+        </FieldSet>
+
+        {!formId && !onSubmitRef && (
+          <Field orientation="horizontal" className="justify-end border-t border-gray-200 pt-6">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSaving}
+                className="min-w-[80px]"
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button type="submit" disabled={isSaving} className="min-w-[100px]">
+              {isSaving
+                ? mode === CrudMode.EDIT
+                  ? 'Actualizando...'
+                  : 'Creando...'
+                : mode === CrudMode.EDIT
+                  ? 'Actualizar'
+                  : 'Crear'}
+            </Button>
+          </Field>
+        )}
+      </FieldGroup>
+    </form>
+  )
+}
+</file>
+
+<file path="src/modules/document/DocumentList.tsx">
+}, (prevProps, nextProps) => {
+  return checkMemoListProps<IUser>(prevProps, nextProps)
+});
+
+UserTableRow.displayName = 'UserTableRow';
+</file>
+
+<file path="src/modules/user/hooks/useUserList.ts">
+  const payload = apiError.payload
+  const title = payload?.message ?? apiError.message ?? 'Error al guardar'
+  const errors = payload?.errors
+  if (errors && typeof errors === 'object') {
+    const lines = Object.values(errors).flat().filter(Boolean) as string[]
+    if (lines.length > 0) {
+      return { title, description: lines.slice(0, 5).join(' ') }
+    }
+  }
+  return { title }
+}
+
+export const apiClient = axios.create({
+  baseURL: APP_CONFIG.apiBaseUrl,
+  timeout: 10000,
+  withCredentials: true
+})
+
+apiClient.interceptors.request.use((config) => {
+  const token = sessionStore.getState().token
+
+  if (token) {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    } as AxiosRequestHeaders
+  }
+  return config
+})
+
+let refreshPromise: Promise<{ access_token: string } | null> | null = null
+
+function logoutAndReject(
+  error: unknown,
+  status: number,
+  message: string
+): Promise<never> {
+  refreshPromise = null
+  sessionStore.getState().logout({ propagate: false })
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
+  const payload = error && typeof error === 'object' && 'response' in error
+    ? (error as { response?: { data?: unknown } }).response?.data
+    : undefined
+  return Promise.reject(new ApiError(message, status, payload))
+}
+
+function ensureRefreshPromise(): void {
+  if (refreshPromise) return
+  refreshPromise = refreshTokenRequest()
+    .then((data) => data)
+    .catch((err) => {
+      refreshPromise = null
+      throw err
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+}
+
+function getErrorMessage(error: { response?: { data?: unknown } }, fallback: string): string {
+  return (error.response?.data as { message?: string })?.message ?? fallback
+}
+
+function reject401(error: unknown, status: number, message: string): Promise<never> {
+  const payload =
+    error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: unknown } }).response?.data
+      : undefined
+  return Promise.reject(new ApiError(message, status, payload))
+}
+
+function hadAuthorizationHeader(config: AxiosRequestConfig): boolean {
+  const headers = config.headers as Record<string, unknown> | undefined
+  return Boolean(headers?.Authorization)
+}
+
+async function handle401Retry(
+  error: { response?: { status?: number; data?: unknown } },
+  originalConfig: AxiosRequestConfig & { _retry?: boolean }
+): Promise<unknown> {
+  const status = error.response?.status ?? 401
+  const message = getErrorMessage(error, 'Unauthorized')
+
+  if (originalConfig._retry) {
+    return logoutAndReject(error, status, message)
+  }
+
+  if (!hadAuthorizationHeader(originalConfig)) {
+    return reject401(error, status, message)
+  }
+
+  ensureRefreshPromise()
+
+  try {
+    const tokens = await refreshPromise
+    if (tokens) {
+      sessionStore.getState().setTokens({
+        token: tokens.access_token
+      })
+      originalConfig._retry = true
+      return apiClient.request(originalConfig)
+    }
+  } catch {
+    return logoutAndReject(error, status, getErrorMessage(error, 'Session expired'))
+  }
+
+  return logoutAndReject(error, status, message)
+}
+
+function handle403(error: { response?: { data?: unknown }; config?: { method?: string; url?: string } }): void {
+  const errorData = error.response?.data as { message?: string } | undefined
+  const method = error.config?.method?.toUpperCase() ?? 'REQUEST'
+  const url = error.config?.url ?? ''
+  const message = errorData?.message ?? 'No tienes permisos para realizar esta acción'
+  const actionDescription = `${method} ${url}`
+  usePermissionsModal.getState().openModal(message, actionDescription)
+}
+
+function rejectWithApiError(error: {
+  response?: { data?: ApiErrorPayload; status?: number }
+  message?: string
+}): Promise<never> {
+  const status = error.response?.status
+  const message =
+    error.response?.data?.message ?? error.message ?? 'Unexpected error, please try again'
+  return Promise.reject(new ApiError(message, status, error.response?.data))
+}
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const status = error.response?.status
+    if (status === 401) {
+      const originalConfig = error.config as AxiosRequestConfig & { _retry?: boolean }
+      return handle401Retry(error, originalConfig)
+    }
+    if (status === 403) {
+      handle403(error)
+    }
+    return rejectWithApiError(error)
+  }
+)
+</file>
+
+<file path="src/shared/api/resourceApi.ts">
+  [key: string]: unknown
+}
+
+type BaseCrudMethods<TRecord, TForm, TParams> = {
+  readonly list: (_params: TParams) => Promise<PaginatedResponse<TRecord>>
+  readonly search: (_params: TParams) => Promise<PaginatedResponse<TRecord>>
+  readonly show: (_id: string, _params?: Partial<TForm>) => Promise<TRecord>
+  readonly create: (_payload: TForm | FormData) => Promise<TRecord>
+  readonly update: (_id: string, _payload: TForm | FormData) => Promise<TRecord>
+  readonly remove: (_id: string) => Promise<string>
+  readonly report: (_params: ReportParams) => Promise<Blob>
+}
+
+export const createCrudApi = <
+  TRecord extends Record<string, unknown>,
+  TForm extends Record<string, unknown> = TRecord,
+  TParams = Record<string, unknown>,
+  TCustomMethods = Record<string, unknown>,
+>({
+  basePath,
+  mapListResponse,
+  mapCreateInput,
+  mapUpdateInput,
+  customMethods
+}: CrudApiConfig<TRecord, TForm, TCustomMethods>): BaseCrudMethods<TRecord, TForm, TParams> & TCustomMethods => {
+  const list = async (params: TParams) => {
+    const { data } = await apiClient.get<PaginatedResponse<TRecord>>(basePath, { params })
+    return mapListResponse ? mapListResponse(data) : data
+  }
+
+  const search = async (params: TParams) => {
+    const { active, ...bodyParams } = params as Record<string, unknown>
+
+    const queryParams: Record<string, string> = {}
+    if (active !== undefined) {
+      queryParams.active = String(active)
+    }
+
+    const url = Object.keys(queryParams).length > 0
+      ? `${basePath}/search?${new URLSearchParams(queryParams).toString()}`
+      : `${basePath}/search`
+
+    const { data } = await apiClient.post<PaginatedResponse<TRecord>>(url, bodyParams)
+    return mapListResponse ? mapListResponse(data) : data
+  }
+
+  const create = async (payload: TForm | FormData) => {
+    if (payload instanceof FormData) {
+      const { data } = await apiClient.post<TRecord>(basePath, payload)
+      return data
+    }
+    const body = mapCreateInput ? mapCreateInput(payload) : payload
+    const queryParams = await setQueryParams(payload)
+    const { data } = await apiClient.post<TRecord>(`${basePath}?${queryParams.toString()}`, body)
+    return data
+  }
+
+  const setQueryParams = async (payload: TForm) => {
+    const includeParam: Record<string, string> = {}
+    if (payload.include) {
+      includeParam.include = String(payload.include)
+    }
+    const queryParams = new URLSearchParams(includeParam)
+    return queryParams
+  }
+
+  const update = async (id: string, payload: TForm | FormData) => {
+    if (payload instanceof FormData) {
+      const { data } = await apiClient.put<TRecord>(`${basePath}/${id}`, payload)
+      return data
+    }
+    const body = mapUpdateInput ? mapUpdateInput(payload) : payload
+    const queryParams = await setQueryParams(payload)
+    const { data } = await apiClient.put<TRecord>(`${basePath}/${id}?${queryParams.toString()}`, body)
+    return data
+  }
+
+  const show = async (id: string, params?: Partial<TForm>) => {
+    const { data } = await apiClient.get<{ data: TRecord }>(`${basePath}/${id}`, { params })
+    return data.data
+  }
+
+  const remove = async (id: string) => {
+    await apiClient.delete(`${basePath}/${id}`)
+    return id
+  }
+
+  const report = async (params: ReportParams): Promise<Blob> => {
+    const response = await apiClient.post(`/customReport`, params, {
+      responseType: 'blob',
+      timeout: 60000, // 60 seconds for large reports
+    })
+    return response.data
+  }
+
+  const baseMethods = { list, search, show, create, update, remove, report } as const
+
+  const custom = customMethods ? customMethods(basePath) : ({} as TCustomMethods)
+
+  return { ...baseMethods, ...custom } as BaseCrudMethods<TRecord, TForm, TParams> & TCustomMethods
+}
+</file>
+
+<file path="src/shared/auth/authService.ts">
+interface PersistedSession {
+  profile: SessionProfile | null
+}
+
+interface SessionState {
+  profile: SessionProfile | null
+  token: string | null
+  refreshToken: string | null
+  isAuthenticated: boolean
+  isRestoring: boolean
+  setSession: (_payload: { profile: SessionProfile; token: string }) => void
+  setTokens: (_payload: { token: string }) => void
+  setProfile: (_profile: SessionProfile) => void
+  clearSession: () => void
+  restoreSession: () => void
+  logout: (_options?: { propagate?: boolean }) => void
+}
+
+const readPersistedState = (): PersistedSession => {
+  if (typeof window === 'undefined') {
+    return { profile: null }
+  }
+
+  try {
+    const raw = localStorage.getItem(`fallback_${STORAGE_KEY}`)
+    if (raw) {
+      const parsed = JSON.parse(raw) as PersistedSession
+      return { profile: parsed.profile ?? null }
+    }
+
+    const secureData = localStorage.getItem(`secure_${STORAGE_KEY}`)
+    if (secureData) {
+      const parsed = JSON.parse(secureData) as PersistedSession
+      return { profile: parsed.profile ?? null }
+    }
+    return { profile: null }
+  } catch (error) {
+    console.warn('Failed to read session from storage', error)
+    return { profile: null }
+  }
+}
+
+const persistState = (state: PersistedSession) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    localStorage.setItem(`secure_${STORAGE_KEY}`, JSON.stringify(state))
+  } catch (error) {
+    console.error('Failed to persist session state', error)
+  }
+}
+
+const clearPersistedState = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    localStorage.removeItem(`secure_${STORAGE_KEY}`)
+    localStorage.removeItem(`fallback_${STORAGE_KEY}`)
+  } catch (error) {
+    console.error('Failed to clear persisted state', error)
+  }
+}
+
+export const sessionStore = createStore<SessionState>((set) => ({
+  profile: null,
+  token: null,
+  refreshToken: null,
+  isAuthenticated: false,
+  isAuthenticating: false,
+  isRestoring: true,
+  setSession: ({ profile, token }) => {
+    persistState({ profile })
+    set({
+      profile,
+      token,
+      refreshToken: null,
+      isAuthenticated: true,
+      isRestoring: false
+    })
+  },
+  setTokens: ({ token }) => {
+    set((_current) => ({
+      token,
+      refreshToken: null,
+      isAuthenticated: Boolean(token)
+    }))
+  },
+  setProfile: (profile) => {
+    set((current) => {
+      persistState({ profile })
+      return {
+        profile,
+        token: current.token,
+        refreshToken: current.refreshToken,
+        isAuthenticated: Boolean(current.token),
+        isRestoring: false
+      }
+    })
+  },
+  clearSession: () => {
+    clearPersistedState()
+    set({
+      profile: null,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isRestoring: false
+    })
+  },
+  restoreSession: () => {
+    const persisted = readPersistedState()
+    set({
+      profile: persisted.profile,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isRestoring: Boolean(persisted.profile)
+    })
+  },
+  logout: ({ propagate } = { propagate: true }) => {
+    clearPersistedState()
+    set({
+      profile: null,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isRestoring: false
+    })
+    if (propagate && typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
+  }
+}))
+</file>
+
+<file path="src/shared/auth/useSession.ts">
+export const ACTION_ORDER = {
+  RESTORE: 10,
+  DETAIL: 20,
+  EDIT: 30,
+  PRINT: 40,
+  REMOVE: 50,
+} as const
+
+export interface ActionOption {
+  key: string
+  label: string
+  icon: ReactNode
+  order: number
+  onClick: () => void
+  variant?: 'default' | 'destructive'
+}
+
+export interface ActionButtonGroupProps {
+  isSelectable?: boolean
+  isSelected?: boolean
+  edit?: boolean
+  mobile?: boolean
+  print?: boolean
+  detail?: boolean
+  dropdown?: boolean
+  remove?: boolean
+  restore?: boolean
+  onEdit?: () => void
+  onDetail?: () => void
+  onPrint?: () => void
+  onRestore?: () => void
+  onRemove?: () => void
+  onSelect?: () => void
+  /** Custom options; use order < 10 to show before default actions (restore, detail, edit, print, remove). */
+  extraOptions?: ActionOption[]
+  children?: ReactNode
+  className?: string
+  disabled?: boolean
+}
+
+interface ActionConfig {
+  key: string
+  icon: ReactNode
+  dropdownIcon: ReactNode
+  label: string
+  handler?: () => void
+  visible: boolean
+  order: number
+  variant?: 'default' | 'destructive'
+}
+
+const ICON_INLINE = 'h-8 w-8 md:h-6 md:w-6'
+const ICON_DROPDOWN = 'mr-2 h-5 w-5'
+
+const HOVER_VISIBLE_COUNT = 2
+
+function stopAndRun(e: React.MouseEvent, action?: () => void) {
+  e.stopPropagation()
+  action?.()
+}
+
+function buildActions(props: ActionButtonGroupProps): ActionConfig[] {
+  const {
+    restore,
+    detail,
+    edit,
+    print,
+    remove,
+    onRestore,
+    onDetail,
+    onEdit,
+    onPrint,
+    onRemove,
+    extraOptions = [],
+  } = props
+
+  const builtIns: ActionConfig[] = [
+    {
+      key: 'restore',
+      icon: <RotateCcw className={ICON_INLINE} />,
+      dropdownIcon: <RotateCcw className={ICON_DROPDOWN} />,
+      label: 'Restaurar',
+      handler: onRestore,
+      visible: Boolean(restore && onRestore),
+      order: ACTION_ORDER.RESTORE,
+    },
+    {
+      key: 'detail',
+      icon: <Eye className={ICON_INLINE} />,
+      dropdownIcon: <Eye className={ICON_DROPDOWN} />,
+      label: 'Ver detalles',
+      handler: onDetail,
+      visible: Boolean(detail && onDetail),
+      order: ACTION_ORDER.DETAIL,
+    },
+    {
+      key: 'edit',
+      icon: <Edit className={ICON_INLINE} />,
+      dropdownIcon: <Edit className={ICON_DROPDOWN} />,
+      label: 'Editar',
+      handler: onEdit,
+      visible: Boolean(edit && onEdit),
+      order: ACTION_ORDER.EDIT,
+    },
+    {
+      key: 'print',
+      icon: <Printer className={ICON_INLINE} />,
+      dropdownIcon: <Printer className={ICON_DROPDOWN} />,
+      label: 'Imprimir',
+      handler: onPrint,
+      visible: Boolean(print && onPrint),
+      order: ACTION_ORDER.PRINT,
+    },
+    {
+      key: 'remove',
+      icon: <Trash2 className={ICON_INLINE} />,
+      dropdownIcon: <Trash2 className={ICON_DROPDOWN} />,
+      label: 'Eliminar',
+      handler: onRemove,
+      visible: Boolean(remove && onRemove),
+      order: ACTION_ORDER.REMOVE,
+      variant: 'destructive',
+    },
+  ]
+
+  const fromExtra: ActionConfig[] = extraOptions.map((opt) => ({
+    key: opt.key,
+    icon: opt.icon,
+    dropdownIcon: opt.icon,
+    label: opt.label,
+    handler: opt.onClick,
+    visible: true,
+    order: opt.order,
+    variant: opt.variant,
+  }))
+
+  const all = [...fromExtra, ...builtIns]
+    .filter((a) => a.visible && a.handler)
+    .sort((a, b) => a.order - b.order)
+
+  return all
+}
+
+function DropdownActions({
+  actions,
+  disabled,
+}: {
+  actions: ActionConfig[]
+  disabled: boolean
+}) {
+  return (
+    <>
+      {actions.map((action) => (
+        <DropdownMenuItem
+          key={action.key}
+          onClick={(e) => stopAndRun(e, action.handler)}
+          disabled={disabled}
+          variant={action.variant}
+          className={
+            action.variant === 'destructive'
+              ? 'text-destructive focus:text-destructive'
+              : undefined
+          }
+        >
+          {action.dropdownIcon}
+          <span>{action.label}</span>
+        </DropdownMenuItem>
+      ))}
+    </>
+  )
+}
+
+function ActionIconButton({
+  action,
+  disabled,
+  showTooltip,
+  className,
+}: {
+  action: ActionConfig
+  disabled: boolean
+  showTooltip?: boolean
+  className?: string
+}) {
+  const colorClass =
+    action.variant === 'destructive'
+      ? 'text-destructive hover:text-destructive/90 hover:bg-destructive/10'
+      : 'text-primary hover:text-primary/90 hover:bg-primary/10'
+
+  const btn = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={(e) => stopAndRun(e, action.handler)}
+      title={action.label}
+      disabled={disabled}
+      aria-label={action.label}
+      className={cn(
+        'h-8 w-8 shrink-0 p-0 transition-all duration-200',
+        colorClass,
+        className
+      )}
+    >
+      {action.icon}
+    </Button>
+  )
+
+  if (showTooltip) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{btn}</TooltipTrigger>
+        <TooltipContent side="left">{action.label}</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return btn
+}
+
+function InlineSingleAction({
+  action,
+  disabled,
+}: {
+  action: ActionConfig
+  disabled: boolean
+}) {
+  return (
+    <ActionIconButton action={action} disabled={disabled} showTooltip />
+  )
+}
+
+function InlineMultipleActions({
+  actions,
+  disabled,
+}: {
+  actions: ActionConfig[]
+  disabled: boolean
+}) {
+  const hoverVisible = actions.slice(0, HOVER_VISIBLE_COUNT)
+
+  return (
+    <div
+      className="group relative inline-flex h-8 shrink-0 justify-end overflow-visible"
+      role="group"
+      aria-label="Acciones"
+    >
+      {/* Dos iconos: solo visibles cuando el cursor está sobre el grupo (3 puntos + iconos), no cuando está sobre el menú */}
+      <div
+        className={cn(
+          'absolute right-full top-0 flex h-8 items-center gap-0 rounded-l-md border border-r-0 border-border bg-card shadow-sm',
+          'opacity-0 transition-opacity duration-200',
+          'group-hover:opacity-100',
+          'pointer-events-none group-hover:pointer-events-auto'
+        )}
+      >
+        {hoverVisible.map((action) => (
+          <ActionIconButton
+            key={action.key}
+            action={action}
+            disabled={disabled}
+            showTooltip={false}
+          />
+        ))}
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-8 w-8 shrink-0 p-0 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground',
+              'border border-transparent hover:border-border hover:bg-card hover:shadow-sm',
+              'rounded-md group-hover:rounded-l-none group-hover:rounded-r-md'
+            )}
+            disabled={disabled}
+            aria-label="Más opciones"
+            aria-haspopup="menu"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          side="bottom"
+          sideOffset={0}
+          className="bg-card border border-border shadow-lg rounded-md"
+        >
+          {actions.map((action) => (
+            <DropdownMenuItem
+              key={action.key}
+              onClick={(e) => stopAndRun(e, action.handler)}
+              disabled={disabled}
+              variant={action.variant}
+              className={
+                action.variant === 'destructive'
+                  ? 'text-destructive focus:text-destructive'
+                  : undefined
+              }
+            >
+              {action.dropdownIcon}
+              <span>{action.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
+function DropdownSelectAction({
+  selected,
+  onSelect,
+  disabled,
+}: {
+  selected: boolean
+  onSelect: () => void
+  disabled: boolean
+}) {
+  const icon = selected ? (
+    <MinusSquare className={cn(ICON_DROPDOWN, 'text-red-600')} />
+  ) : (
+    <PlusSquare className={cn(ICON_DROPDOWN, 'text-green-600')} />
+  )
+
+  return (
+    <DropdownMenuItem onClick={(e) => stopAndRun(e, onSelect)} disabled={disabled}>
+      {icon}
+      <span>{selected ? 'Deseleccionar' : 'Seleccionar'}</span>
+    </DropdownMenuItem>
+  )
+}
+
+function InlineSelectAction({
+  selected,
+  onSelect,
+  disabled,
+}: {
+  selected: boolean
+  onSelect: () => void
+  disabled: boolean
+}) {
+  const colorClass = selected
+    ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+    : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+
+  const selectIcon = selected ? (
+    <MinusSquare className="h-5 w-5 md:h-8 md:w-8 text-red-600" />
+  ) : (
+    <PlusSquare className="h-5 w-5 md:h-8 md:w-8 text-green-600" />
+  )
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={(e) => stopAndRun(e, onSelect)}
+      title={selected ? 'Deseleccionar' : 'Seleccionar'}
+      aria-label={selected ? 'Deseleccionar' : 'Seleccionar'}
+      disabled={disabled}
+      className={cn('h-8 w-8 p-0', colorClass)}
+    >
+      {selectIcon}
+    </Button>
+  )
+}
+
+export const ActionButtonGroup = (props: ActionButtonGroupProps) => {
+  const {
+    isSelectable = false,
+    isSelected = false,
+    dropdown = false,
+    onSelect,
+    children,
+    className,
+    disabled = false,
+  } = props
+
+  const actions = buildActions(props)
+  const hasActions = actions.length > 0
+
+  // dropdown={true} → UX compacta: 3 puntos, hover muestra 2 iconos + puntos, click abre menú completo
+  if (dropdown) {
+    return (
+      <div
+        className={cn('flex items-center justify-end gap-1', className)}
+        role="toolbar"
+        aria-label="Acciones de fila"
+      >
+        {isSelectable && onSelect && (
+          <InlineSelectAction
+            selected={isSelected}
+            onSelect={onSelect}
+            disabled={disabled}
+          />
+        )}
+        {hasActions &&
+          (actions.length === 1 ? (
+            <InlineSingleAction action={actions[0]} disabled={disabled} />
+          ) : (
+            <InlineMultipleActions actions={actions} disabled={disabled} />
+          ))}
+        {children}
+      </div>
+    )
+  }
+
+  // dropdown={false} → Solo trigger + menú con todas las opciones (sin hover de 2 iconos)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          disabled={disabled}
+          aria-label="Abrir menú de acciones"
+          aria-haspopup="menu"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        sideOffset={0}
+        className="bg-card border border-border shadow-lg rounded-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col">
+          {isSelectable && onSelect && (
+            <DropdownSelectAction
+              selected={isSelected}
+              onSelect={onSelect}
+              disabled={disabled}
+            />
+          )}
+          {hasActions && <DropdownActions actions={actions} disabled={disabled} />}
+          {children}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+</file>
+
+<file path="src/shared/components/molecules/TableEmptyState.tsx">
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  className?: string;
+  icon?: 'plus' | 'search' | 'default';
+}
+
+export const TableEmptyState = ({
+  title = 'No se encontraron resultados',
+  description = 'Intenta ajustar tus filtros o agregar un nuevo registro para comenzar.',
+  actionLabel,
+  onAction,
+  className,
+  icon = 'default'
+}: TableEmptyStateProps) => {
+  const iconClasses = 'h-10 w-10 text-energy/80 shrink-0';
+
+  const renderIcon = () => {
+    switch (icon) {
+      case 'plus':
+        return <Plus className={iconClasses} />;
+      case 'search':
+        return <Search className={iconClasses} />;
+      default:
+        return <Inbox className={iconClasses} strokeWidth={1.5} />;
+    }
+  };
+
+  const hasAction = Boolean(actionLabel && onAction);
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'flex flex-col items-center justify-center gap-6 rounded-xl border-2 border-dashed border-energy/20 bg-linear-to-br from-background via-card to-background px-8 py-14 sm:py-16 text-center relative overflow-hidden transition-colors duration-200',
+        className
+      )}
+    >
+      <div className="absolute inset-0 bg-linear-to-br from-energy/5 via-transparent to-energy/5 opacity-50 pointer-events-none" aria-hidden />
+
+      <div className="relative z-10 flex flex-col items-center gap-5 max-w-sm">
+        <div
+          className={cn(
+            'flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-energy/20 to-energy/10 border border-energy/25 shadow-sm',
+            hasAction && 'ring-2 ring-energy/10 ring-offset-2 ring-offset-background'
+          )}
+        >
+          {renderIcon()}
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-semibold text-lg sm:text-xl text-foreground tracking-tight">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-muted-foreground text-sm sm:text-base max-w-md leading-relaxed">
+              {description}
+            </p>
+          )}
+        </div>
+
+        {hasAction && (
+          <Button
+            size="lg"
+            onClick={onAction}
+            className="mt-1 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-energy/40 transition-shadow duration-200"
+          >
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2 shrink-0" aria-hidden />
+            {actionLabel}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+</file>
+
+<file path="src/shared/components/molecules/TableLoadingState.tsx">
+  rows?: number;
+  className?: string;
+  showSkeletons?: boolean;
+  mini?: boolean;
+}
+
+export const TableLoadingState = ({
+  message = 'Cargando datos...',
+  rows = 3,
+  className,
+  showSkeletons = false,
+  mini = false
+}: TableLoadingStateProps) => {
+  if (showSkeletons) {
+    return (
+      <div className={cn('space-y-3', className)}>
+        {Array.from({ length: rows }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center space-x-4 rounded-lg border border-border/50 bg-card/30 p-4 animate-pulse"
+          >
+            <div className="w-10 h-10 bg-muted/30 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-muted/30 rounded w-3/4" />
+              <div className="h-3 bg-muted/20 rounded w-1/2" />
+            </div>
+            <div className="w-20 h-8 bg-muted/30 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center gap-6 rounded-xl border-2 border-dashed border-energy/20 bg-gradient-to-br from-background via-card to-background px-8 text-center relative overflow-hidden',
+        className,
+        mini ? 'py-4' : 'py-16'
+      )}
+    >
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-energy/5 via-transparent to-energy/5 opacity-50" />
+      
+      <div className="relative z-10 flex flex-col items-center gap-6">
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-energy/20 to-energy/10 border border-energy/30 shadow-lg">
+          <Loader2 className="h-10 w-10 text-energy animate-spin" />
+        </div>
+        
+        <div className="space-y-3">
+          <h3 className="font-bold text-xl text-foreground">{message}</h3>
+          <p className="text-muted-foreground">
+            Por favor espera mientras se cargan los datos...
+          </p>
+        </div>
+        
+        {/* Loading dots animation */}
+        <div className="flex space-x-2 mt-2">
+          <div className="w-3 h-3 bg-energy rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-3 h-3 bg-energy rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-3 h-3 bg-energy rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+</file>
+
+<file path="src/shared/components/ConfirmDialog.tsx">
+  variant?: ConfirmDialogVariant
+  title?: ReactNode
+  description?: ReactNode
+  /** For variant='delete': e.g. "Empresa X" → "¿Eliminar Empresa X? Esta acción no se puede deshacer." */
+  entityName?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  isLoading?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+  /** Override confirm button style; ignored when variant='delete' (uses destructive) */
+  colorButtonConfirm?: string
+  colorButtonCancel?: string
+}
+
+const DELETE_DEFAULTS = {
+  title: 'Eliminar registro',
+  confirmLabel: 'Eliminar',
+  loadingLabel: 'Eliminando...',
+  descriptionNoName: 'Esta acción no se puede deshacer. ¿Deseas continuar?',
+  descriptionWithName: (name: string) =>
+    `¿Eliminar "${name}"? Esta acción no se puede deshacer.`
+} as const
+
+const DEFAULT_DEFAULTS = {
+  title: 'Confirmar',
+  description: '¿Estás seguro de que quieres continuar?',
+  confirmLabel: 'Confirmar',
+  loadingLabel: 'Procesando...'
+} as const
+
+function resolveCopy(
+  variant: ConfirmDialogVariant,
+  overrides: {
+    title?: ReactNode
+    description?: ReactNode
+    entityName?: string
+    confirmLabel?: string
+  }
+): { title: ReactNode; description: ReactNode; confirmLabel: string; loadingLabel: string } {
+  const isDelete = variant === 'delete'
+  const title = overrides.title ?? (isDelete ? DELETE_DEFAULTS.title : DEFAULT_DEFAULTS.title)
+  const description =
+    overrides.description ??
+    (isDelete
+      ? overrides.entityName
+        ? DELETE_DEFAULTS.descriptionWithName(overrides.entityName)
+        : DELETE_DEFAULTS.descriptionNoName
+      : DEFAULT_DEFAULTS.description)
+  const confirmLabel =
+    overrides.confirmLabel ??
+    (isDelete ? DELETE_DEFAULTS.confirmLabel : DEFAULT_DEFAULTS.confirmLabel)
+  const loadingLabel = isDelete ? DELETE_DEFAULTS.loadingLabel : DEFAULT_DEFAULTS.loadingLabel
+  return { title, description, confirmLabel, loadingLabel }
+}
+
+/**
+ * ConfirmDialog built on Radix UI AlertDialog.
+ * Use variant="delete" for delete confirmations (destructive button, icon, clearer copy).
+ */
+export const ConfirmDialog = ({
+  isOpen,
+  variant = 'default',
+  title,
+  description,
+  entityName,
+  confirmLabel,
+  cancelLabel = 'Cancelar',
+  isLoading = false,
+  onConfirm,
+  onCancel,
+  colorButtonConfirm = 'bg-primary hover:bg-primary/90'
+}: ConfirmDialogProps): JSX.Element => {
+  const isDelete = variant === 'delete'
+  const { title: resolvedTitle, description: resolvedDescription, confirmLabel: resolvedConfirmLabel, loadingLabel } =
+    resolveCopy(variant, { title, description, entityName, confirmLabel })
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={(open: boolean) => !open && onCancel()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          {isDelete && (
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2 className="size-8" aria-hidden />
+            </AlertDialogMedia>
+          )}
+          <AlertDialogTitle>{resolvedTitle}</AlertDialogTitle>
+          <AlertDialogDescription>{resolvedDescription}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel} disabled={isLoading}>
+            {cancelLabel}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isLoading}
+            variant={isDelete ? 'destructive' : undefined}
+            className={!isDelete ? colorButtonConfirm : undefined}
+          >
+            {isLoading ? loadingLabel : resolvedConfirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+</file>
+
+<file path="src/shared/components/DatePicker.tsx">
+  {
+    files: ['**/emails/**/*.ts', '**/emails/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+])
+</file>
+
+<file path="tsconfig.app.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/emails/*": ["./emails/*"]
+    }
+  }
+}
+</file>
+
+<file path="tsconfig.node.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+</file>
+
+<file path="vite.config.ts">
+}
+
+export type SubscriptionStatus =
+  | 'none'
+  | 'active'
+  | 'trialing'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'unpaid'
+  | 'exempt'
+
+export interface SubscriptionState {
+  status: SubscriptionStatus
+  is_blocked: boolean
+  is_owner: boolean
+}
+
+export interface SessionProfile {
+  user: SessionUser
+  abilities: string[]
+  roles: ERoleUserSlug[]
+  company?: Record<string, unknown> | null
+  country?: Record<string, unknown> | null
+  tenant?: SessionTenant | null
+  subscription?: SubscriptionState | null
+}
+</file>
+
+<file path="src/main.tsx">
+ * 
+ * // Usar los catálogos
+ * const levels = catalogs[CatalogType.CYCLING_CLASS_LEVELS] || [];
+ * const instructors = catalogs[CatalogType.INSTRUCTORS] || [];
+ * ```
+ */
+export function useCatalogs(catalogRequest: CatalogRequest) {
+    // Una sola query que obtiene todos los catálogos de una vez
+    const { data, isLoading, isError, error, refetch } = useQuery({
+        queryKey: ['catalogs', catalogRequest],
+        queryFn: async () => {
+            const response = await apiClient.post('/selects', catalogRequest)
+            return response.data?.data || response.data || {}
+        },
+        staleTime: 15 * 60 * 1000, // 15 minutos
+        gcTime: 0, // no cache
+        refetchOnWindowFocus: false,
+        retry: 2,
+        enabled: Object.keys(catalogRequest).length > 0,
+    })
+
+    // Procesar los catálogos recibidos
+    const catalogs = useMemo(() => {
+        const catalogData: Partial<CatalogResponse> = {}
+
+        // Inicializar todos los catálogos solicitados como arrays vacíos
+        Object.keys(catalogRequest).forEach(catalogType => {
+            catalogData[catalogType as CatalogType] = []
+        })
+
+        // Llenar con los datos recibidos
+        if (data) {
+            Object.entries(data).forEach(([catalogType, catalogItems]) => {
+                if (Array.isArray(catalogItems)) {
+                    catalogData[catalogType as CatalogType] = catalogItems
+                }
+            })
+        }
+
+        return catalogData
+    }, [data, catalogRequest])
+
+    // Función para refrescar un catálogo específico (refetch completo)
+    const refetchCatalog = useCallback(async () => {
+        // Como es una sola llamada, refrescamos todo
+        await refetch()
+    }, [refetch])
+
+    // Función para obtener un catálogo específico
+    const getCatalog = useCallback((catalogType: CatalogType): IEntity[] => {
+        return catalogs[catalogType] || []
+    }, [catalogs])
+
+    // Función para buscar un item específico en un catálogo
+    const findCatalogItem = useCallback((
+        catalogType: CatalogType,
+        predicate: (_item: IEntity) => boolean
+    ): IEntity | undefined => {
+        const catalog = getCatalog(catalogType)
+        return catalog.find(predicate)
+    }, [getCatalog])
+
+    // Función para obtener un item por ID
+    const getCatalogItemById = useCallback((
+        catalogType: CatalogType,
+        id: string
+    ): IEntity | undefined => {
+        return findCatalogItem(catalogType, item => item.id === id)
+    }, [findCatalogItem])
+
+    // Función para obtener un item por slug
+    const getCatalogItemBySlug = useCallback((
+        catalogType: CatalogType,
+        slug: string
+    ): IEntity | undefined => {
+        return findCatalogItem(catalogType, item => item.slug === slug)
+    }, [findCatalogItem])
+
+    return {
+        // Datos
+        catalogs,
+
+        // Estados
+        isLoading,
+        isError,
+        error,
+
+        // Acciones
+        refetch,
+        refetchCatalog,
+
+        // Utilidades
+        getCatalog,
+        findCatalogItem,
+        getCatalogItemById,
+        getCatalogItemBySlug,
+
+        // Información adicional
+        catalogTypes: Object.keys(catalogRequest) as CatalogType[],
+        isEmpty: Object.values(catalogs).every(catalog => !catalog || (Array.isArray(catalog) && catalog.length === 0)),
+    }
+}
+
+/**
+ * Hook simplificado para obtener un solo catálogo
+ * 
+ * @example
+ * ```tsx
+ * const { data: levels, isLoading } = useCatalog(CatalogType.CYCLING_CLASS_LEVELS, {
+ *   _sort: 'name'
+ * });
+ * ```
+ */
+export function useCatalog(
+    catalogType: CatalogType,
+    params?: CatalogParams
+) {
+    return useQuery({
+        queryKey: ['catalog', catalogType, params],
+        queryFn: async () => {
+            const catalogRequest = { [catalogType]: params || {} }
+            const response = await apiClient.post('/selects', catalogRequest)
+            const data = response.data?.data || response.data || {}
+            return data[catalogType] || []
+        },
+        staleTime: 15 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        retry: 2,
+    })
+}
+
+/**
+ * Hook para obtener catálogos con invalidación manual
+ * Útil cuando necesitas control total sobre cuándo se actualizan
+ */
+export function useCatalogsManual() {
+    const [catalogs, setCatalogs] = useState<Partial<CatalogResponse>>({})
+    const [isLoading, setIsLoading] = useState(false)
+    const [errors, setErrors] = useState<Error[]>([])
+
+    const fetchCatalogs = useCallback(async (catalogRequest: CatalogRequest) => {
+        setIsLoading(true)
+        setErrors([])
+
+        try {
+            const response = await apiClient.post('/selects', catalogRequest)
+            const data = response.data?.data || response.data || {}
+
+            const newCatalogs: Partial<CatalogResponse> = {}
+
+            // Inicializar todos los catálogos solicitados
+            Object.keys(catalogRequest).forEach(catalogType => {
+                newCatalogs[catalogType as CatalogType] = []
+            })
+
+            // Llenar con los datos recibidos
+            Object.entries(data).forEach(([catalogType, catalogItems]) => {
+                if (Array.isArray(catalogItems)) {
+                    newCatalogs[catalogType as CatalogType] = catalogItems
+                }
+            })
+
+            setCatalogs(prev => ({ ...prev, ...newCatalogs }))
+            return newCatalogs
+        } catch (error) {
+            setErrors([error as Error])
+            return {}
+        } finally {
+            setIsLoading(false)
+        }
+    }, [])
+
+    const clearCatalogs = useCallback(() => {
+        setCatalogs({})
+        setErrors([])
+    }, [])
+
+    return {
+        catalogs,
+        isLoading,
+        errors,
+        fetchCatalogs,
+        clearCatalogs,
+    }
+}
+</file>
+
+<file path="src/shared/interfaces/Entity.ts">
+
+  const roleRoute = useMemo(() => {
+    return roleRoutes[role as ERoleUserSlug]
+  }, [role])
+  return (
+    <Routes>
+      {/* Rutas públicas (solo sin sesión) */}
+      <Route element={<PublicOnlyRoute />}>
+        <Route
+          path="/login"
+          element={
+            <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+              <div className="w-full max-w-sm md:max-w-5xl">
+                <LoginForm />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+              <div className="w-full max-w-sm md:max-w-5xl">
+                <SignupForm />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+              <div className="w-full max-w-sm">
+                <ForgotPasswordForm />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/auth/reset-password/:token/:email"
+          element={
+            <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+              <div className="w-full max-w-sm">
+                <ResetPasswordForm />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/auth/accept-invitation/:token"
+          element={
+            <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+              <div className="w-full max-w-sm">
+                <AcceptInvitationForm />
+              </div>
+            </div>
+          }
+        />
+      </Route>
+
+      {/* Rutas protegidas (requieren sesión) */}
+      <Route element={<ProtectedRoute />}>
+        {/* Selección de plan: requiere auth pero NO requiere suscripción activa */}
+        <Route path="/select-plan" element={<SelectPlanPage />} />
+
+        {/* App principal: requiere auth + suscripción activa */}
+        <Route element={<SubscriptionGuard />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<Navigate to={roleRoute ?? '/dashboard'} replace />} />
+            <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
+
+            <Route element={<PermissionRoute permissionEntity="dashboard" />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+            </Route>
+            <Route path="/company/me" element={<CompanyMePage />} />
+            <Route element={<PermissionRoute permissionEntity="company" />}>
+              <Route path="/company" element={<CompanyListPage />} />
+            </Route>
+            
+            <Route element={<PermissionRoute permissionEntity="client" />}>
+              <Route path="/client" element={<ClientListPage />} />
+              <Route path="/client/:id" element={<ClientDetailPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="project" />}>
+              <Route path="/project" element={<ProjectListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="user" />}>
+              <Route path="/user" element={<UserListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="tenant" />}>
+              <Route path="/tenant" element={<TenantListPage />} />
+              <Route path="/tenant/new" element={<TenantWizardPage />} />
+            </Route>
+            
+              <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/change-plan" element={<ChangePlanPage />} />
+
+            <Route element={<PermissionRoute permissionEntity="subscription_plan" />}>
+              <Route path="/subscription-plan" element={<SubscriptionPlanListPage />} />
+            </Route>
+            <Route element={<PermissionRoute role={[ERoleUserSlug.SUPER_ADMIN]} />}>
+              
+              <Route path="/role" element={<RoleListPage />} />
+              <Route path="/role/:id" element={<RoleDetailPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="stage" />}>
+              <Route path="/stage" element={<StageListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="note" />}>
+              <Route path="/note" element={<NoteListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="interaction" />}>
+              <Route path="/interaction" element={<InteractionListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="client_metadata" />}>
+              <Route path="/client-metadata" element={<ClientMetadataListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="area" />}>
+              <Route path="/area" element={<AreaListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="document" />}>
+              <Route path="/document" element={<DocumentListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="document_type" />}>
+              <Route path="/document-type" element={<DocumentTypeListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="job_position" />}>
+              <Route path="/job-position" element={<JobPositionListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="contract_type" />}>
+              <Route path="/contract-type" element={<ContractTypeListPage />} />
+            </Route>
+
+            <Route path="/collaborator/me" element={<CollaboratorMePage />} />
+            <Route element={<PermissionRoute permissionEntity="collaborator" />}>
+              <Route path="/collaborator" element={<CollaboratorListPage />} />
+              <Route path="/collaborator/import" element={<CollaboratorImportPage />} />
+              <Route path="/collaborator/:id" element={<CollaboratorDetailPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="administrative_minute" />}>
+              <Route path="/administrative-minute" element={<AdministrativeMinuteListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="document_collaborator" />}>
+              <Route path="/document-collaborator" element={<DocumentCollaboratorListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="document_template" />}>
+              <Route path="/document-template" element={<DocumentTemplateListPage />} />
+              <Route path="/document-template/:id" element={<DocumentTemplateDetailPage />} />
+              <Route path="/document-template/:id/collaborators" element={<DocumentTemplateCollaboratorsPage />} />
+            </Route>
+            <Route element={<PermissionRoute permissionEntity="audit" />}>
+              <Route path="/audit" element={<AuditListPage />} />
+            </Route>
+          </Route>
+        </Route>
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+export default App
+</file>
+
+<file path="src/index.css">
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Fuente oficial shadcn / Vercel: Geist Sans */
+@import "@fontsource/geist/latin-400.css";
+@import "@fontsource/geist/latin-500.css";
+@import "@fontsource/geist/latin-600.css";
+@import "@fontsource/geist/latin-700.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --text-base: 14px;
+    --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+    --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(1.000 0.000 0);
+  --foreground: oklch(0.148 0.004 165.53208295239287);
+  --card: oklch(1.000 0.000 0);
+  --card-foreground: oklch(0.148 0.004 165.53208295239287);
+  --popover: oklch(1.000 0.000 0);
+  --popover-foreground: oklch(0.148 0.004 165.53208295239287);
+  --primary: oklch(0.549 0.097 159.63135618663054);
+  --primary-foreground: oklch(1.000 0.000 0);
+  --secondary: oklch(0.888 0.006 170.44355814020074);
+  --secondary-foreground: oklch(0.232 0.024 167.15740184274037);
+  --muted: oklch(0.888 0.006 170.44355814020074);
+    --muted-foreground: oklch(0.50 0.012 0);
+  --accent: oklch(0.846 0.003 165.061485195223);
+  --accent-foreground: oklch(0.245 0.040 159.51768656922368);
+  --destructive: oklch(0.580 0.237 28.43022926835137);
+  --border: oklch(0.849 0.007 170.36997246667403);
+  --input: oklch(0.849 0.007 170.36997246667403);
+  --ring: oklch(0.549 0.097 159.63135618663054);
+  --chart-1: oklch(0.549 0.097 159.63135618663054);
+  --chart-2: oklch(0.814 0.158 158.56764812939187);
+  --chart-3: oklch(0.838 0.109 161.8117529018972);
+  --chart-4: oklch(0.567 0.140 154.10261494965977);
+  --chart-5: oklch(0.426 0.102 154.8464649104687);
+  --sidebar: oklch(0.888 0.006 170.44355814020074);
+  --sidebar-foreground: oklch(0.232 0.024 167.15740184274037);
+  --sidebar-primary: oklch(0.549 0.097 159.63135618663054);
+  --sidebar-primary-foreground: oklch(1.000 0.000 0);
+  --sidebar-accent: oklch(0.846 0.003 165.061485195223);
+  --sidebar-accent-foreground: oklch(0.245 0.040 159.51768656922368);
+  --sidebar-border: oklch(0.849 0.007 170.36997246667403);
+  --sidebar-ring: oklch(0.549 0.097 159.63135618663054);
+}
+
+.dark {
+  --background: oklch(0.206 0.021 162.87823389021386);
+  --foreground: oklch(0.963 0.003 165.92910884250014);
+  --card: oklch(0.257 0.030 162.3860690068186);
+  --card-foreground: oklch(0.963 0.003 165.92910884250014);
+  --popover: oklch(0.257 0.030 162.3860690068186);
+  --popover-foreground: oklch(0.963 0.003 165.92910884250014);
+  --primary: oklch(0.648 0.141 156.91744339890334);
+  --primary-foreground: oklch(0.963 0.003 165.92910884250014);
+  --secondary: oklch(0.277 0.012 169.30779108265398);
+  --secondary-foreground: oklch(0.967 0.009 170.3539530764611);
+  --muted: oklch(0.277 0.012 169.30779108265398);
+    --muted-foreground: oklch(0.65 0.02 0);
+  --accent: oklch(0.700 0.033 163.86094521522128);
+  --accent-foreground: oklch(0.970 0.016 164.70876026597404);
+  --destructive: oklch(0.580 0.237 28.43022926835137);
+  --border: oklch(0.388 0.027 168.4167185965618);
+  --input: oklch(0.388 0.027 168.4167185965618);
+  --ring: oklch(0.648 0.141 156.91744339890334);
+  --chart-1: oklch(0.648 0.141 156.91744339890334);
+  --chart-2: oklch(0.851 0.158 159.07526861756875);
+  --chart-3: oklch(0.892 0.125 161.36446139520822);
+  --chart-4: oklch(0.588 0.131 156.4050199896148);
+  --chart-5: oklch(0.438 0.083 158.8623429805404);
+  --sidebar: oklch(0.351 0.045 161.86639589540508);
+  --sidebar-foreground: oklch(0.963 0.003 165.92910884250014);
+  --sidebar-primary: oklch(0.648 0.141 156.91744339890334);
+  --sidebar-primary-foreground: oklch(0.963 0.003 165.92910884250014);
+  --sidebar-accent: oklch(0.700 0.033 163.86094521522128);
+  --sidebar-accent-foreground: oklch(0.970 0.016 164.70876026597404);
+  --sidebar-border: oklch(0.387 0.029 163.84630675636143);
+  --sidebar-ring: oklch(0.648 0.141 156.91744339890334);
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Global focus-visible fallback for keyboard users (WCAG 2.4.7). Components with outline-none + ring use their own focus style. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Scroll margin so focused elements aren’t hidden under fixed headers */
+  [id]:focus {
+    scroll-margin-top: 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+table {
+  th.actions {
+    background-color: var(--card);
+  }
+  td.actions, th.actions {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: right;
+    position: sticky;
+    right: 0;
+    width: 1.25rem;
+    background-color: var(--card);
+    animation: shadow-on-scroll linear;
+    animation-timeline: scroll(x);
+    overflow: visible;
+    z-index: 10;
+  }
+}
+
+@keyframes shadow-on-scroll {
+  0% {
+    filter: drop-shadow(rgb(from #21252c r g b / 8%) -2px 10px 6px);
+  }
+  75% {
+    filter: drop-shadow(rgb(from #21252c r g b / 8%) -2px 10px 6px);
+  }
+  99% {
+    filter: none;
+  }
+  /* 0% {
+    filter: none;
+  }
+  1% {
+    filter: drop-shadow(-2px 0 6px rgba(33, 37, 44, 0.08));
+  }
+  100% {
+    filter: drop-shadow(-2px 0 6px rgba(33, 37, 44, 0.08));
+  } */
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "prepare": "husky",
+    "build:email": "email build --packageManager pnpm",
+    "dev:email": "email dev",
+    "export:email": "email export --pretty",
+    "export:email:blade": "BLADE_OUTPUT=true email export --pretty",
+    "copy-emails": "pnpm run export:email:blade && mkdir -p ../backend/Modules/Email/resources/views ../backend/public/email/static && cp -r out/* ../backend/Modules/Email/resources/views/ && (cp -r emails/static/* ../backend/public/email/static/ 2>/dev/null || true) && for f in ../backend/Modules/Email/resources/views/*.html; do [ -f \"$f\" ] && mv \"$f\" \"${f%.html}.blade.php\"; done"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource/geist": "^5.2.8",
+    "@fontsource/geist-sans": "^5.2.5",
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tabler/icons-react": "^3.37.1",
+    "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.13.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.575.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.0",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.71.2",
+    "react-router-dom": "^7.13.1",
+    "react-select": "^5.10.2",
+    "recharts": "2.15.4",
+    "sileo": "^0.1.5",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.1",
+    "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "20.4.2",
+    "@commitlint/config-conventional": "20.4.2",
+    "@eslint/js": "^9.39.1",
+    "@react-email/components": "^1.0.8",
+    "@react-email/preview-server": "5.2.9",
+    "@react-email/render": "^2.0.4",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.7",
+    "prettier": "^3.8.1",
+    "pretty-quick": "4.2.2",
+    "react-email": "^5.2.9",
+    "shadcn": "^3.8.5",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^8.0.0-beta.13"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^8.0.0-beta.13"
+    }
+  }
+}
+</file>
+
+<file path="src/components/app-sidebar.tsx">

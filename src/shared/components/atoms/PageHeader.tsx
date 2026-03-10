@@ -1,28 +1,27 @@
+import type { ReactNode } from 'react'
+
 interface PageHeaderProps {
   title: string;
-  total: number;
-  selectedCount?: number;
-  isEmpty?: boolean;
-  isLoading?: boolean;
+  description: string;
+  actions?: ReactNode;
 }
 
 export const PageHeader = ({ 
-  title, 
-  total, 
-  selectedCount = 0, 
-  isEmpty = false, 
-  isLoading = false 
+  title,
+  description,
+  actions
 }: PageHeaderProps) => (
-  <div>
-    <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
-    <div className="mt-1 flex items-center gap-4 text-sm text-slate-600">
-      <span>Total: {total}</span>
-      {selectedCount > 0 && (
-        <span className="font-medium text-blue-600">{selectedCount} selected</span>
-      )}
-      {isEmpty && !isLoading && (
-        <span className="text-amber-600">No results found</span>
-      )}
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      <p className="text-muted-foreground">
+        {description}
+      </p>
     </div>
+    {actions && (
+      <div className="flex items-center gap-2">
+        {actions}
+      </div>
+    )}
   </div>
 );
